@@ -55,7 +55,7 @@ class KenBurnsViewWidget extends StatelessWidget {
   }
 }
 class AkanYazi extends StatelessWidget {
-  final String text ='« Kafandaki düşüncelerin aslında dışarıdaki kuş sesinden hiçbir farkı yok. Sadece bunların az ya da çok alakalı olduğuna sen karar veriyorsun... »';
+  final String text ='« Kafandaki düşüncelerin aslında dışarıdaki kuş sesinden hiçbir farkı yok. Sadece bunların az ya da çok alakalı olduğuna sen karar veriyorsun...   »';
   //final String text ="Ates-i Aşk";
 
   @override
