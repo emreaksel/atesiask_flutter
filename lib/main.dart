@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:js';
+
+import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -145,63 +149,137 @@ class PlaybackControlsWidget extends StatelessWidget {
 }
 
 class _MyCustomLayoutState extends State<MyCustomLayout> {
+
+  StreamController<bool> _showDialogStreamController = StreamController<bool>();
+
+  @override
+  void dispose() {
+    _showDialogStreamController.close();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
+    Degiskenler(); // değişkenleri çağıralım
     arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
   }
 
   void arkaplanIslemleri() async {
-    NotificationData result = await compute(getirMenba, "https://raw.githubusercontent.com/emreaksel/atesiask/main/kaynak/menba.json");
-    print(result); // İşlem sonucunu burada kullanabilirsiniz
+    final Future<Map<String,dynamic>> jsonDataFuture = compute(getirMenba, "./kaynak/menba.json");
+
+    jsonDataFuture.then((jsonDataMap) {
+      // jsonDataMap'i burada kullanabilirsiniz
+      _showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+
+      // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
+      /*Timer(Duration(seconds: 5), () {
+        _showDialogStreamController.add(false);
+      });*/
+    });
+
+    //print(result); // İşlem sonucunu burada kullanabilirsiniz
+  }
+  void closeDialog() {
+    _showDialogStreamController.add(false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      child: Column(
-        children: [
-          Expanded(
-            flex: 8,
-            child: KenBurnsViewWidget(),
+    return Stack(
+      children: [
+        Container(
+          color: Colors.black,
+          child: Column(
+            children: [
+              Expanded(
+                flex: 8,
+                child: KenBurnsViewWidget(),
+              ),
+              Expanded(
+                flex: 2,
+                child: PlaybackControlsWidget(),
+              ),
+            ],
           ),
-          Expanded(
-            flex: 2,
-            child: PlaybackControlsWidget(),
+        ),
+        Positioned.fill(
+          child: StreamBuilder<bool>(
+            stream: _showDialogStreamController.stream,
+            initialData: false,
+            builder: (context, snapshot) {
+              if (snapshot.data == true) {
+                return Align(
+                  alignment: Alignment.center,
+                  child: CustomDialog(onClose: closeDialog),
+                );
+              } else {
+                return Container(); // Diyaloğu gizle
+              }
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+
 }
 
-
-Future<NotificationData> getirMenba(String yol) async {
-  final HttpService _httpService = HttpService(yol);
+Future<Map<String,dynamic>> getirMenba(String yol) async {
+  final HttpService _httpService = HttpService();
 
   try {
     final jsonStr = await _httpService.fetchData(yol);
-    final jsonData = JsonHelper.parseJson(jsonStr);
+    final jsonDataList = JsonHelper.parseJson(jsonStr); // Bu satırı kullanmanıza gerek yok, veri zaten bir liste
 
-    final notificationData = NotificationData.fromJson(jsonData);
-    return notificationData;
+    int versiyon = jsonDataList["versiyon"];
+    print("versiyon: $versiyon");
 
+    int dinlemeListesiID = jsonDataList["aktifliste"]["dinlemeListesiID"];
+    print("dinlemeListesiID: $dinlemeListesiID");
+
+    List<dynamic> dinlemeListeleri = jsonDataList["dinlemeListeleri"];
+    for (var item in dinlemeListeleri) {
+      int id = item["id"];
+      String link = item["link"];
+      String caption = item["caption"];
+      String explanation = item["explanation"];
+
+      print("id: $id, link: $link, caption: $caption, explanation: $explanation");
+    }
+
+
+
+    Degiskenler().versionMenba=versiyon;
+    Degiskenler().dinlemeListeleri=dinlemeListeleri;
+    return jsonDataList; // Gelen veriyi doğrudan döndürüyoruz
   } catch (error) {
     throw Exception('Veri çekilirken bir hata oluştu: $error');
   }
 }
 
-class NotificationData {
-  final int version;
-  final Map<String, dynamic> notification;
 
-  NotificationData({required this.version, required this.notification});
+class CustomDialog extends StatelessWidget {
 
-  factory NotificationData.fromJson(Map<String, dynamic> json) {
-    return NotificationData(
-      version: json['versiyon'],
-      notification: json['bildirim'],
+  final VoidCallback onClose;
+
+  CustomDialog({required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Aşk Olsun'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Hoşgeldin Güzeller Güzelim...'),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: onClose, // onClose callback fonksiyonunu kullanarak diyaloğu kapat
+            child: Text('Teşekkürler'),
+          ),
+        ],
+      ),
     );
   }
 }
