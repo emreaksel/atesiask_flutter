@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'dart:js';
-
+import 'dart:math';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -12,9 +11,13 @@ import 'package:text_scroll/text_scroll.dart';
 import 'yaveran/HttpService.dart';
 import 'yaveran/JsonHelper.dart';
 
+AkanYazi akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
+final Degiskenler degiskenler = Degiskenler();
+
 void main() {
   runApp(MyApp());
 }
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -43,7 +46,7 @@ class KenBurnsViewWidget extends StatelessWidget {
             maxAnimationDuration: Duration(milliseconds: 13000),
             maxScale: 1.3,
             child: Image.network(
-              "./atesiask/bahar11.jpeg",
+              "${degiskenler.kaynakYolu}/atesiask/bahar11.jpg",
               fit: BoxFit.cover,
             ),
           ),
@@ -51,7 +54,7 @@ class KenBurnsViewWidget extends StatelessWidget {
             bottom: 0, // Alt boşluk
             left: 0, // Sol boşluk
             right: 0, // Sağ boşluk
-            child: AkanYazi(),
+            child: akanYazi,
           ),
         ],
       ),
@@ -59,27 +62,29 @@ class KenBurnsViewWidget extends StatelessWidget {
   }
 }
 class AkanYazi extends StatelessWidget {
-  final String text ='« Kafandaki düşüncelerin aslında dışarıdaki kuş sesinden hiçbir farkı yok. Sadece bunların az ya da çok alakalı olduğuna sen karar veriyorsun...   »';
-  //final String text ="Ates-i Aşk";
+  final String text;
+
+  AkanYazi(this.text);
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    double yaziBoyutu = screenHeight * 0.019; // Yüksekliğin %5'i kadar bir yazı boyutu
+    double yaziBoyutu =
+        screenHeight * 0.019; // Yüksekliğin %5'i kadar bir yazı boyutu
 
-    // Yazının kapladığı genişliği hesaplayın
     final painter = TextPainter(
       text: TextSpan(text: text, style: TextStyle(fontSize: yaziBoyutu)),
       textDirection: TextDirection.ltr,
     )..layout();
 
     double textWidth = painter.width;
-    int targetLength = (textWidth / 3.34).toInt(); // Yazının genişlik oranına göre hedef uzunluk hesaplayın
+    int targetLength = (textWidth / 3.34)
+        .toInt(); // Yazının genişlik oranına göre hedef uzunluk hesaplayın
     String finalText;
 
     if (screenWidth > textWidth) {
-      finalText = text + ' ' * (screenWidth/3.9).toInt();
+      finalText = text + ' ' * (screenWidth / 3.9).toInt();
     } else {
       int spacesToAdd = targetLength - text.length;
       finalText = text + ' ' * spacesToAdd;
@@ -101,6 +106,9 @@ class AkanYazi extends StatelessWidget {
       ),
     );
   }
+}
+void updateAkanYazi(String newText) {
+  akanYazi = AkanYazi(newText);
 }
 class PlaybackControlsWidget extends StatelessWidget {
   const PlaybackControlsWidget({super.key});
@@ -148,8 +156,8 @@ class PlaybackControlsWidget extends StatelessWidget {
   }
 }
 
-class _MyCustomLayoutState extends State<MyCustomLayout> {
 
+class _MyCustomLayoutState extends State<MyCustomLayout> {
   StreamController<bool> _showDialogStreamController = StreamController<bool>();
 
   @override
@@ -161,28 +169,82 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
   @override
   void initState() {
     super.initState();
-    Degiskenler(); // değişkenleri çağıralım
+    degiskenler.addListenerForVariable("versionMenba", () => DegiskenlerListener(degiskenler.versionMenba));
+    degiskenler.addListenerForVariable("kaynakYolu", () => DegiskenlerListener(degiskenler.kaynakYolu));
     arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
+  }
+  void DegiskenlerListener(dynamic degisenDeger) {
+    // Değişen değeri işleyin
+    print("Değişen değer: $degisenDeger");
+  }
+  void closeDialog() {
+    degiskenler.versionMenba=13254;
+    //Değişen değeri bildirerek listener'ları tetikleyin.
+    degiskenler.notifyListenersForVariable("versionMenba");
+
+    _showDialogStreamController.add(false);
   }
 
   void arkaplanIslemleri() async {
-    final Future<Map<String,dynamic>> jsonDataFuture = compute(getirMenba, "./kaynak/menba.json");
 
-    jsonDataFuture.then((jsonDataMap) {
-      // jsonDataMap'i burada kullanabilirsiniz
-      _showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+    final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
+    final Future<Map<String, dynamic>> jsonSozler = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
 
-      // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
-      /*Timer(Duration(seconds: 5), () {
+    _showDialogStreamController
+        .add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+    // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
+    /*Timer(Duration(seconds: 5), () {
         _showDialogStreamController.add(false);
       });*/
+
+    jsonSozler.then((jsonDataMap) {
+      if (jsonDataMap.containsKey("sozler")) {
+        final List<dynamic> sozlerListesi = jsonDataMap["sozler"];
+        if (sozlerListesi.isNotEmpty) {
+          final Random random = Random();
+          final int randomIndex = random.nextInt(sozlerListesi.length);
+          final String secilenSoz = sozlerListesi[randomIndex];
+          updateAkanYazi(secilenSoz);
+          print("Rastgele Seçilen Söz: $secilenSoz");
+        } else {
+          print("Söz listesi boş.");
+        }
+      } else {
+        print("Verilerde 'sozler' anahtarı bulunamadı.");
+      }
+    });
+    jsonMenba.then((jsonData) {
+      int versiyon = jsonData["versiyon"];
+      //print("versiyon: $versiyon");
+
+      int dinlemeListesiID = jsonData["aktifliste"]["dinlemeListesiID"];
+      //print("dinlemeListesiID: $dinlemeListesiID");
+
+      List<dynamic> dinlemeListeleri = jsonData["dinlemeListeleri"];
+      for (var item in dinlemeListeleri) {
+        int id = item["id"];
+        String link = item["link"];
+        String caption = item["caption"];
+        String explanation = item["explanation"];
+        if (id == dinlemeListesiID) {
+          compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json").then((data) {
+            degiskenler.listDinle=data["sesler"];
+            //print(degiskenler.listDinle);
+          });
+        }
+        //print("id: $id, link: $link, caption: $caption, explanation: $explanation");
+      }
+
+      degiskenler.versionMenba = versiyon;
+      degiskenler.dinlemeListeleri = dinlemeListeleri;
+
+      //print(jsonData["aktifliste"]);
     });
 
     //print(result); // İşlem sonucunu burada kullanabilirsiniz
   }
-  void closeDialog() {
-    _showDialogStreamController.add(false);
-  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -222,45 +284,22 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
       ],
     );
   }
-
 }
 
-Future<Map<String,dynamic>> getirMenba(String yol) async {
+Future<Map<String, dynamic>> getirJsonData(String yol) async {
   final HttpService _httpService = HttpService();
 
   try {
     final jsonStr = await _httpService.fetchData(yol);
     final jsonDataList = JsonHelper.parseJson(jsonStr); // Bu satırı kullanmanıza gerek yok, veri zaten bir liste
 
-    int versiyon = jsonDataList["versiyon"];
-    print("versiyon: $versiyon");
-
-    int dinlemeListesiID = jsonDataList["aktifliste"]["dinlemeListesiID"];
-    print("dinlemeListesiID: $dinlemeListesiID");
-
-    List<dynamic> dinlemeListeleri = jsonDataList["dinlemeListeleri"];
-    for (var item in dinlemeListeleri) {
-      int id = item["id"];
-      String link = item["link"];
-      String caption = item["caption"];
-      String explanation = item["explanation"];
-
-      print("id: $id, link: $link, caption: $caption, explanation: $explanation");
-    }
-
-
-
-    Degiskenler().versionMenba=versiyon;
-    Degiskenler().dinlemeListeleri=dinlemeListeleri;
     return jsonDataList; // Gelen veriyi doğrudan döndürüyoruz
   } catch (error) {
     throw Exception('Veri çekilirken bir hata oluştu: $error');
   }
 }
 
-
 class CustomDialog extends StatelessWidget {
-
   final VoidCallback onClose;
 
   CustomDialog({required this.onClose});
@@ -275,7 +314,11 @@ class CustomDialog extends StatelessWidget {
           Text('Hoşgeldin Güzeller Güzelim...'),
           SizedBox(height: 16),
           ElevatedButton(
-            onPressed: onClose, // onClose callback fonksiyonunu kullanarak diyaloğu kapat
+            onPressed: onClose,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightGreen, // Burada rengi ayarlıyoruz
+            ),
+            // onClose callback fonksiyonunu kullanarak diyaloğu kapat
             child: Text('Teşekkürler'),
           ),
         ],
