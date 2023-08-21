@@ -250,8 +250,6 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
     //print(result); // İşlem sonucunu burada kullanabilirsiniz
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Stack(
