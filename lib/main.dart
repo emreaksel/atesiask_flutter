@@ -10,6 +10,8 @@ import 'package:text_scroll/text_scroll.dart';
 
 import 'yaveran/HttpService.dart';
 import 'yaveran/JsonHelper.dart';
+import 'yaveran/AudioService.dart';
+import 'yaveran/AudioController.dart';
 
 AkanYazi akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
 final Degiskenler degiskenler = Degiskenler();
@@ -158,11 +160,14 @@ class PlaybackControlsWidget extends StatelessWidget {
 
 
 class _MyCustomLayoutState extends State<MyCustomLayout> {
-  StreamController<bool> _showDialogStreamController = StreamController<bool>();
+  final StreamController<bool> _showDialogStreamController = StreamController<bool>();
+  final AudioService _audioService = AudioService();
+  final AudioController _audioController = AudioController();
 
   @override
   void dispose() {
     _showDialogStreamController.close();
+    _audioService.dispose();
     super.dispose();
   }
 
@@ -178,10 +183,10 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
     print("Değişen değer: $degisenDeger");
   }
   void closeDialog() {
-    degiskenler.versionMenba=13254;
+    //degiskenler.versionMenba=13254;
     //Değişen değeri bildirerek listener'ları tetikleyin.
-    degiskenler.notifyListenersForVariable("versionMenba");
-
+    //degiskenler.notifyListenersForVariable("versionMenba");
+    _audioController.startAudio();
     _showDialogStreamController.add(false);
   }
 
@@ -190,8 +195,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
     final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
     final Future<Map<String, dynamic>> jsonSozler = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
 
-    _showDialogStreamController
-        .add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+    _showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
     // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
     /*Timer(Duration(seconds: 5), () {
         _showDialogStreamController.add(false);
@@ -206,10 +210,12 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
           final String secilenSoz = sozlerListesi[randomIndex];
           updateAkanYazi(secilenSoz);
           print("Rastgele Seçilen Söz: $secilenSoz");
-        } else {
+        }
+        else {
           print("Söz listesi boş.");
         }
-      } else {
+      }
+      else {
         print("Verilerde 'sozler' anahtarı bulunamadı.");
       }
     });
