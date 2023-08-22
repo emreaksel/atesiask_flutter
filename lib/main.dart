@@ -5,16 +5,23 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
 import 'package:text_scroll/text_scroll.dart';
 
 import 'yaveran/HttpService.dart';
 import 'yaveran/JsonHelper.dart';
 import 'yaveran/AudioService.dart';
-import 'yaveran/AudioController.dart';
 
-AkanYazi akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
 final Degiskenler degiskenler = Degiskenler();
+final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
+AkanYazi _akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
+PlaybackControlsWidget _playbackControlsState=PlaybackControlsWidget();
+ListeWidget _listeWidget= ListeWidget(initialSongList: [
+  {"parca_adi": "Şarkı qqqqq"},
+  {"parca_adi": "Şarkı 2"},
+]);
 
 void main() {
   runApp(MyApp());
@@ -56,7 +63,7 @@ class KenBurnsViewWidget extends StatelessWidget {
             bottom: 0, // Alt boşluk
             left: 0, // Sol boşluk
             right: 0, // Sağ boşluk
-            child: akanYazi,
+            child: _akanYazi,
           ),
         ],
       ),
@@ -109,14 +116,106 @@ class AkanYazi extends StatelessWidget {
     );
   }
 }
-void updateAkanYazi(String newText) {
-  akanYazi = AkanYazi(newText);
+
+class ListeWidget extends StatefulWidget {
+  final List<dynamic> initialSongList;
+  ListeWidget({required this.initialSongList});
+
+  @override
+  _ListeWidgetState createState() => _ListeWidgetState();
 }
-class PlaybackControlsWidget extends StatelessWidget {
-  const PlaybackControlsWidget({super.key});
+class _ListeWidgetState extends State<ListeWidget> {
+  List<dynamic> songList = []; // Başlangıçta boş bir liste
+
+  @override
+  void initState() {
+    super.initState();
+    updateSongList();
+    // Başlangıç şarkı listesini kullanarak güncelleme işlemi
+    // Burada _audioService içinden şarkı listesini almayı deneyin
+    // Örneğin: songList = _audioService.getSongList();
+    // Burada _audioService'in kullanımına uygun şekilde şarkı listesini çekmelisiniz.
+  }
+  // Bu işlev, dışarıdan songList verisini güncellemek için kullanılır
+  void updateSongList() {
+    print("TEST updateSongList");
+    setState(() {
+      if (degiskenler.listDinle.isNotEmpty) {
+        songList = degiskenler.listDinle;
+      } else songList=widget.initialSongList;
+      if (songList.isNotEmpty) print("songList0: ${songList[0]}");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(child: Text('Dinle')),
+      ),
+      body: ListView.builder(
+        itemCount: songList.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(songList[index]['parca_adi']),
+            onTap: () {
+              // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
+              // Örneğin, çalma işlemi veya şarkı ayrıntıları sayfasına yönlendirme
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class PlaybackControlsWidget extends StatefulWidget {
+  const PlaybackControlsWidget({Key? key}) : super(key: key);
+
+  @override
+  _PlaybackControlsWidgetState createState() => _PlaybackControlsWidgetState();
+}
+class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
+  bool isInitialized = false;
+
+  Future<void> initializeAudioService() async {
+    await _audioService.init();
+    setState(() {
+      isInitialized = true;
+    });
+  }
+  void _togglePlayPause() {
+    setState(() {
+      if (_audioService.player.playing) {
+        _audioService.pause(); // Eğer çalıyorsa duraklat, değilse oynat
+      } else {
+        _audioService.play(); // Çalmıyorsa oynat
+      }
+    });
+  }
+
+  int flexValue = 2; // Başlangıçta atanacak flex değeri
+  void updateFlexValue() {
+    setState(() {
+      // Burada yeni bir flex değeri atayabilirsiniz
+      flexValue = 1; // Örnek olarak yeni bir flex değeri atadık
+    });
+  }
+
+  @override
+  void initState() {
+    //initializeAudioService(); // Ses servisi başlatma fonksiyonunu çağır
+    super.initState();
+  }
+  @override
+  void dispose() {
+    _audioService.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    IconData playPauseIcon = _audioService.player.playing ? FontAwesomeIcons.pauseCircle : FontAwesomeIcons.playCircle;
+
     return Container(
       padding: EdgeInsets.all(16.0),
       child: Row(
@@ -124,7 +223,18 @@ class PlaybackControlsWidget extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () {
-              // Implement your rewind action here
+              updateFlexValue();
+            },
+            icon: const Icon(
+              FontAwesomeIcons.list,
+              color: Colors.white,
+              size: 36.0,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              // Previous aksiyonunu burada çağırabilirsiniz
+              _audioService.previous();
             },
             icon: const Icon(
               FontAwesomeIcons.backwardStep,
@@ -133,18 +243,17 @@ class PlaybackControlsWidget extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              // Implement your play/pause action here
-            },
-            icon: const Icon(
-              FontAwesomeIcons.circlePlay,
+            onPressed: _togglePlayPause, // Fonksiyonu doğrudan atayın
+            icon: Icon(
+              playPauseIcon,
               color: Colors.white,
               size: 36.0,
             ),
           ),
           IconButton(
             onPressed: () {
-              // Implement your fast forward action here
+              // Next aksiyonunu burada çağırabilirsiniz
+              _audioService.next();
             },
             icon: const Icon(
               FontAwesomeIcons.forwardStep,
@@ -158,38 +267,68 @@ class PlaybackControlsWidget extends StatelessWidget {
   }
 }
 
-
 class _MyCustomLayoutState extends State<MyCustomLayout> {
   final StreamController<bool> _showDialogStreamController = StreamController<bool>();
-  final AudioService _audioService = AudioService();
-  final AudioController _audioController = AudioController();
 
   @override
   void dispose() {
     _showDialogStreamController.close();
-    _audioService.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    degiskenler.addListenerForVariable("versionMenba", () => DegiskenlerListener(degiskenler.versionMenba));
-    degiskenler.addListenerForVariable("kaynakYolu", () => DegiskenlerListener(degiskenler.kaynakYolu));
+
+    degiskenler.addListenerForVariable("versionMenba", () => DegiskenlerListener("versionMenba",degiskenler.versionMenba));
+    degiskenler.addListenerForVariable("listDinle", () => DegiskenlerListener("listDinle",degiskenler.listDinle));
     arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
   }
-  void DegiskenlerListener(dynamic degisenDeger) {
+  void DegiskenlerListener(String tag,dynamic degisenDeger) {
     // Değişen değeri işleyin
-    print("Değişen değer: $degisenDeger");
+    if (tag=="listDinle") {
+      setPlaylist();
+      setListeWidget();
+    }
+    //print("Değişen değer: $degisenDeger");
   }
   void closeDialog() {
-    //degiskenler.versionMenba=13254;
     //Değişen değeri bildirerek listener'ları tetikleyin.
     //degiskenler.notifyListenersForVariable("versionMenba");
-    _audioController.startAudio();
     _showDialogStreamController.add(false);
-  }
 
+  }
+  void setPlaylist() {
+
+    List<AudioSource> playlist = [];
+
+    for (var item in degiskenler.listDinle) {
+      playlist.add(
+        AudioSource.uri(
+          Uri.parse(item['url']),
+          tag: MediaItem(
+            id: '${item['sira_no']}',
+            album: item['parca_adi'],
+            title: item['parca_adi'],
+            artUri: Uri.parse(
+              "${degiskenler.kaynakYolu}/atesiask/bahar.jpg",
+            ),
+            artist: item['seslendiren'],
+          ),
+        ),
+      );
+    }
+
+    _audioService.setPlaylist(playlist);
+  }
+  void setListeWidget() {
+    print("TEST setListeWidget");
+
+    setState(() {
+        _playbackControlsState=PlaybackControlsWidget();
+        _listeWidget=ListeWidget(initialSongList:degiskenler.listDinle);
+    });
+  }
   void arkaplanIslemleri() async {
 
     final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
@@ -208,7 +347,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
           final Random random = Random();
           final int randomIndex = random.nextInt(sozlerListesi.length);
           final String secilenSoz = sozlerListesi[randomIndex];
-          updateAkanYazi(secilenSoz);
+          _akanYazi=AkanYazi(secilenSoz);
           print("Rastgele Seçilen Söz: $secilenSoz");
         }
         else {
@@ -235,6 +374,8 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
         if (id == dinlemeListesiID) {
           compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json").then((data) {
             degiskenler.listDinle=data["sesler"];
+            degiskenler.notifyListenersForVariable("listDinle");
+
             //print(degiskenler.listDinle);
           });
         }
@@ -259,12 +400,16 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
           child: Column(
             children: [
               Expanded(
-                flex: 8,
-                child: KenBurnsViewWidget(),
+                flex: 3,
+                child: KenBurnsViewWidget(),//KenBurnsViewWidget()
               ),
               Expanded(
-                flex: 2,
-                child: PlaybackControlsWidget(),
+                flex: 3,
+                child: _listeWidget,//KenBurnsViewWidget()
+              ),
+              Expanded(
+                flex: 4, // flex değeri güncel flexValue'ya göre ayarlandı,
+                child: _playbackControlsState,
               ),
             ],
           ),
@@ -288,6 +433,8 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
       ],
     );
   }
+
+
 }
 
 Future<Map<String, dynamic>> getirJsonData(String yol) async {
