@@ -18,7 +18,7 @@ final Degiskenler degiskenler = Degiskenler();
 final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
 AkanYazi _akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
 PlaybackControlsWidget _playbackControlsState=PlaybackControlsWidget();
-ListeWidget _listeWidget= ListeWidget(initialSongList: [
+ListeWidget _listeWidget= ListeWidget(songList: [
   {"parca_adi": "Şarkı qqqqq"},
   {"parca_adi": "Şarkı 2"},
 ]);
@@ -116,36 +116,10 @@ class AkanYazi extends StatelessWidget {
     );
   }
 }
+class ListeWidget extends StatelessWidget {
+  final List<dynamic> songList;
 
-class ListeWidget extends StatefulWidget {
-  final List<dynamic> initialSongList;
-  ListeWidget({required this.initialSongList});
-
-  @override
-  _ListeWidgetState createState() => _ListeWidgetState();
-}
-class _ListeWidgetState extends State<ListeWidget> {
-  List<dynamic> songList = []; // Başlangıçta boş bir liste
-
-  @override
-  void initState() {
-    super.initState();
-    updateSongList();
-    // Başlangıç şarkı listesini kullanarak güncelleme işlemi
-    // Burada _audioService içinden şarkı listesini almayı deneyin
-    // Örneğin: songList = _audioService.getSongList();
-    // Burada _audioService'in kullanımına uygun şekilde şarkı listesini çekmelisiniz.
-  }
-  // Bu işlev, dışarıdan songList verisini güncellemek için kullanılır
-  void updateSongList() {
-    print("TEST updateSongList");
-    setState(() {
-      if (degiskenler.listDinle.isNotEmpty) {
-        songList = degiskenler.listDinle;
-      } else songList=widget.initialSongList;
-      if (songList.isNotEmpty) print("songList0: ${songList[0]}");
-    });
-  }
+  ListeWidget({required this.songList});
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +142,6 @@ class _ListeWidgetState extends State<ListeWidget> {
     );
   }
 }
-
 class PlaybackControlsWidget extends StatefulWidget {
   const PlaybackControlsWidget({Key? key}) : super(key: key);
 
@@ -284,6 +257,14 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
     degiskenler.addListenerForVariable("listDinle", () => DegiskenlerListener("listDinle",degiskenler.listDinle));
     arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
   }
+  void setListeWidget() {
+    print("TEST setListeWidget");
+    print(degiskenler.listDinle[3]);
+    setState(() {
+      _playbackControlsState=PlaybackControlsWidget();
+      _listeWidget=ListeWidget(songList:degiskenler.listDinle);
+    });
+  }
   void DegiskenlerListener(String tag,dynamic degisenDeger) {
     // Değişen değeri işleyin
     if (tag=="listDinle") {
@@ -321,20 +302,12 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
 
     _audioService.setPlaylist(playlist);
   }
-  void setListeWidget() {
-    print("TEST setListeWidget");
-
-    setState(() {
-        _playbackControlsState=PlaybackControlsWidget();
-        _listeWidget=ListeWidget(initialSongList:degiskenler.listDinle);
-    });
-  }
   void arkaplanIslemleri() async {
 
     final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
     final Future<Map<String, dynamic>> jsonSozler = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
 
-    _showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+    //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
     // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
     /*Timer(Duration(seconds: 5), () {
         _showDialogStreamController.add(false);
@@ -390,6 +363,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
 
     //print(result); // İşlem sonucunu burada kullanabilirsiniz
   }
+  int activeIndex = 0; // Aktif çocuk indeksi
 
   @override
   Widget build(BuildContext context) {
@@ -400,15 +374,18 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
           child: Column(
             children: [
               Expanded(
-                flex: 3,
-                child: KenBurnsViewWidget(),//KenBurnsViewWidget()
+                flex: 8,
+                child: IndexedStack(
+                  index: activeIndex,
+                  children: [
+                    _listeWidget,
+                    KenBurnsViewWidget(),
+                    // Diğer widget'ları buraya ekleyebilirsiniz
+                  ],
+                ),
               ),
               Expanded(
-                flex: 3,
-                child: _listeWidget,//KenBurnsViewWidget()
-              ),
-              Expanded(
-                flex: 4, // flex değeri güncel flexValue'ya göre ayarlandı,
+                flex: 1, // flex değeri güncel flexValue'ya göre ayarlandı,
                 child: _playbackControlsState,
               ),
             ],
