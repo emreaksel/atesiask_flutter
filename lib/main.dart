@@ -286,9 +286,10 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     // Burada gerekli işlemleri yapabilirsiniz (örneğin: veri yükleme, hazırlık vs.)
     // Ardından bir süre bekleyerek ana ekranı açabiliriz.
+    // Initialize the AudioService first
     initializeAudioService();
 
-    Future.delayed(Duration(seconds: 6), () {
+    Future.delayed(Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -352,7 +353,7 @@ void setPlaylist() {
 }
 
 Future<void> initializeAudioService() async {
-  _audioService.init();
+  await _audioService.init();
 }
 
 void arkaplanIslemleri() async {

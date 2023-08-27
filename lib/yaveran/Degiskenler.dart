@@ -4,9 +4,9 @@ class Degiskenler {
   static final Degiskenler _instance = Degiskenler._internal();
   int versionMenba = 0;
 
-  //String kaynakYolu=".";
+  String kaynakYolu=".";
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
-  String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
+  //String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
 
   List<dynamic> dinlemeListeleri=[];
   List<dynamic> listSozler=[];

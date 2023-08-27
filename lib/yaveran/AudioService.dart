@@ -55,7 +55,6 @@ class AudioService {
         print('A stream error occurred: $e');
       });
 
-
       player.currentIndexStream.listen((index) {
         print("currentIndexStream $index");
         setCurrentTrack(index);
