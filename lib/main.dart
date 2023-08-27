@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
+import 'package:provider/provider.dart';
 import 'package:text_scroll/text_scroll.dart';
 
 import 'yaveran/HttpService.dart';
@@ -15,25 +16,43 @@ import 'yaveran/JsonHelper.dart';
 import 'yaveran/AudioService.dart';
 
 final Degiskenler degiskenler = Degiskenler();
-final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
+AudioInfoNotifier audioInfoNotifier = AudioInfoNotifier.getInstance();
+final AudioService _audioService = AudioService(audioInfoNotifier); // AudioService nesnesini oluşturun
 AkanYazi _akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
-PlaybackControlsWidget _playbackControlsState=PlaybackControlsWidget();
-ListeWidget _listeWidget= ListeWidget(songList: [
-  {"parca_adi": "Şarkı qqqqq"},
-  {"parca_adi": "Şarkı 2"},
-]);
+ListeWidget _listeWidget = ListeWidget(songList: []);
 
 void main() {
   runApp(MyApp());
+  arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
 }
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
+      home: SplashScreen(),
+      /*Scaffold(
         body: SafeArea(
           child: MyCustomLayout(),
+        ),
+      ),*/
+    );
+  }
+}
+class MainScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => EkranBoyutNotifier()),
+        ChangeNotifierProvider.value(
+          value: AudioInfoNotifier.getInstance(),
+        ),
+      ],
+      child: MaterialApp(
+        home: Scaffold(
+          body: SafeArea(
+            child: MyCustomLayout(),
+          ),
         ),
       ),
     );
@@ -47,7 +66,6 @@ class KenBurnsViewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 300,
       child: Stack(
         children: [
           KenBurns(
@@ -116,6 +134,7 @@ class AkanYazi extends StatelessWidget {
     );
   }
 }
+
 class ListeWidget extends StatelessWidget {
   final List<dynamic> songList;
 
@@ -135,6 +154,7 @@ class ListeWidget extends StatelessWidget {
             onTap: () {
               // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
               // Örneğin, çalma işlemi veya şarkı ayrıntıları sayfasına yönlendirme
+              _audioService.playAtIndex(index);
             },
           );
         },
@@ -142,106 +162,10 @@ class ListeWidget extends StatelessWidget {
     );
   }
 }
-class PlaybackControlsWidget extends StatefulWidget {
-  const PlaybackControlsWidget({Key? key}) : super(key: key);
-
-  @override
-  _PlaybackControlsWidgetState createState() => _PlaybackControlsWidgetState();
-}
-class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
-  bool isInitialized = false;
-
-  Future<void> initializeAudioService() async {
-    await _audioService.init();
-    setState(() {
-      isInitialized = true;
-    });
-  }
-  void _togglePlayPause() {
-    setState(() {
-      if (_audioService.player.playing) {
-        _audioService.pause(); // Eğer çalıyorsa duraklat, değilse oynat
-      } else {
-        _audioService.play(); // Çalmıyorsa oynat
-      }
-    });
-  }
-
-  int flexValue = 2; // Başlangıçta atanacak flex değeri
-  void updateFlexValue() {
-    setState(() {
-      // Burada yeni bir flex değeri atayabilirsiniz
-      flexValue = 1; // Örnek olarak yeni bir flex değeri atadık
-    });
-  }
-
-  @override
-  void initState() {
-    //initializeAudioService(); // Ses servisi başlatma fonksiyonunu çağır
-    super.initState();
-  }
-  @override
-  void dispose() {
-    _audioService.dispose();
-    super.dispose();
-  }
-  @override
-  Widget build(BuildContext context) {
-    IconData playPauseIcon = _audioService.player.playing ? FontAwesomeIcons.pauseCircle : FontAwesomeIcons.playCircle;
-
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            onPressed: () {
-              updateFlexValue();
-            },
-            icon: const Icon(
-              FontAwesomeIcons.list,
-              color: Colors.white,
-              size: 36.0,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              // Previous aksiyonunu burada çağırabilirsiniz
-              _audioService.previous();
-            },
-            icon: const Icon(
-              FontAwesomeIcons.backwardStep,
-              color: Colors.white,
-              size: 36.0,
-            ),
-          ),
-          IconButton(
-            onPressed: _togglePlayPause, // Fonksiyonu doğrudan atayın
-            icon: Icon(
-              playPauseIcon,
-              color: Colors.white,
-              size: 36.0,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              // Next aksiyonunu burada çağırabilirsiniz
-              _audioService.next();
-            },
-            icon: const Icon(
-              FontAwesomeIcons.forwardStep,
-              color: Colors.white,
-              size: 36.0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _MyCustomLayoutState extends State<MyCustomLayout> {
-  final StreamController<bool> _showDialogStreamController = StreamController<bool>();
+  final StreamController<bool> _showDialogStreamController =
+      StreamController<bool>();
 
   @override
   void dispose() {
@@ -252,141 +176,39 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
   @override
   void initState() {
     super.initState();
+  }
 
-    degiskenler.addListenerForVariable("versionMenba", () => DegiskenlerListener("versionMenba",degiskenler.versionMenba));
-    degiskenler.addListenerForVariable("listDinle", () => DegiskenlerListener("listDinle",degiskenler.listDinle));
-    arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
-  }
-  void setListeWidget() {
-    print("TEST setListeWidget");
-    print(degiskenler.listDinle[3]);
-    setState(() {
-      _playbackControlsState=PlaybackControlsWidget();
-      _listeWidget=ListeWidget(songList:degiskenler.listDinle);
-    });
-  }
-  void DegiskenlerListener(String tag,dynamic degisenDeger) {
-    // Değişen değeri işleyin
-    if (tag=="listDinle") {
-      setPlaylist();
-      setListeWidget();
-    }
-    //print("Değişen değer: $degisenDeger");
-  }
   void closeDialog() {
     //Değişen değeri bildirerek listener'ları tetikleyin.
     //degiskenler.notifyListenersForVariable("versionMenba");
     _showDialogStreamController.add(false);
-
   }
-  void setPlaylist() {
-
-    List<AudioSource> playlist = [];
-
-    for (var item in degiskenler.listDinle) {
-      playlist.add(
-        AudioSource.uri(
-          Uri.parse(item['url']),
-          tag: MediaItem(
-            id: '${item['sira_no']}',
-            album: item['parca_adi'],
-            title: item['parca_adi'],
-            artUri: Uri.parse(
-              "${degiskenler.kaynakYolu}/atesiask/bahar.jpg",
-            ),
-            artist: item['seslendiren'],
-          ),
-        ),
-      );
-    }
-
-    _audioService.setPlaylist(playlist);
-  }
-  void arkaplanIslemleri() async {
-
-    final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
-    final Future<Map<String, dynamic>> jsonSozler = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
-
-    //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
-    // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
-    /*Timer(Duration(seconds: 5), () {
-        _showDialogStreamController.add(false);
-      });*/
-
-    jsonSozler.then((jsonDataMap) {
-      if (jsonDataMap.containsKey("sozler")) {
-        final List<dynamic> sozlerListesi = jsonDataMap["sozler"];
-        if (sozlerListesi.isNotEmpty) {
-          final Random random = Random();
-          final int randomIndex = random.nextInt(sozlerListesi.length);
-          final String secilenSoz = sozlerListesi[randomIndex];
-          _akanYazi=AkanYazi(secilenSoz);
-          print("Rastgele Seçilen Söz: $secilenSoz");
-        }
-        else {
-          print("Söz listesi boş.");
-        }
-      }
-      else {
-        print("Verilerde 'sozler' anahtarı bulunamadı.");
-      }
-    });
-    jsonMenba.then((jsonData) {
-      int versiyon = jsonData["versiyon"];
-      //print("versiyon: $versiyon");
-
-      int dinlemeListesiID = jsonData["aktifliste"]["dinlemeListesiID"];
-      //print("dinlemeListesiID: $dinlemeListesiID");
-
-      List<dynamic> dinlemeListeleri = jsonData["dinlemeListeleri"];
-      for (var item in dinlemeListeleri) {
-        int id = item["id"];
-        String link = item["link"];
-        String caption = item["caption"];
-        String explanation = item["explanation"];
-        if (id == dinlemeListesiID) {
-          compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json").then((data) {
-            degiskenler.listDinle=data["sesler"];
-            degiskenler.notifyListenersForVariable("listDinle");
-
-            //print(degiskenler.listDinle);
-          });
-        }
-        //print("id: $id, link: $link, caption: $caption, explanation: $explanation");
-      }
-
-      degiskenler.versionMenba = versiyon;
-      degiskenler.dinlemeListeleri = dinlemeListeleri;
-
-      //print(jsonData["aktifliste"]);
-    });
-
-    //print(result); // İşlem sonucunu burada kullanabilirsiniz
-  }
-  int activeIndex = 0; // Aktif çocuk indeksi
 
   @override
   Widget build(BuildContext context) {
+    final ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context);
+
     return Stack(
       children: [
         Container(
-          color: Colors.black,
+          color: Colors.transparent,
           child: Column(
             children: [
               Expanded(
-                flex: 8,
+                flex: ekranBoyutNotifier.ustEkranBoyut,
                 child: IndexedStack(
-                  index: activeIndex,
+                  index: ekranBoyutNotifier.ustEkranAktifIndex,
                   children: [
-                    _listeWidget,
                     KenBurnsViewWidget(),
+                    _listeWidget,
                     // Diğer widget'ları buraya ekleyebilirsiniz
                   ],
                 ),
               ),
               Expanded(
-                flex: 1, // flex değeri güncel flexValue'ya göre ayarlandı,
-                child: _playbackControlsState,
+                flex: ekranBoyutNotifier.altEkranBoyut,
+                // flex değeri güncel flexValue'ya göre ayarlandı,
+                child: PlaybackControlsWidget(),
               ),
             ],
           ),
@@ -410,8 +232,6 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
       ],
     );
   }
-
-
 }
 
 Future<Map<String, dynamic>> getirJsonData(String yol) async {
@@ -419,7 +239,8 @@ Future<Map<String, dynamic>> getirJsonData(String yol) async {
 
   try {
     final jsonStr = await _httpService.fetchData(yol);
-    final jsonDataList = JsonHelper.parseJson(jsonStr); // Bu satırı kullanmanıza gerek yok, veri zaten bir liste
+    final jsonDataList = JsonHelper.parseJson(
+        jsonStr); // Bu satırı kullanmanıza gerek yok, veri zaten bir liste
 
     return jsonDataList; // Gelen veriyi doğrudan döndürüyoruz
   } catch (error) {
@@ -449,6 +270,352 @@ class CustomDialog extends StatelessWidget {
             // onClose callback fonksiyonunu kullanarak diyaloğu kapat
             child: Text('Teşekkürler'),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Burada gerekli işlemleri yapabilirsiniz (örneğin: veri yükleme, hazırlık vs.)
+    // Ardından bir süre bekleyerek ana ekranı açabiliriz.
+    initializeAudioService();
+
+    Future.delayed(Duration(seconds: 6), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MainScreen()), // Ana ekran burada açılır
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black, // Splash ekran rengi
+      body: Center(
+        child: Text(
+          'My App', // Splash ekran metni
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void DegiskenlerListener(String tag, dynamic degisenDeger) {
+  // Değişen değeri işleyin
+  if (tag == "listDinle") {
+    setPlaylist();
+    setListeWidget();
+  } else if (tag == "ekranDegisti") {
+    print("degiskenler.ekranDegisti++;");
+  }
+  //print("Değişen değer: $degisenDeger");
+}
+
+void setListeWidget() {
+  _listeWidget = ListeWidget(songList: degiskenler.listDinle);
+}
+
+void setPlaylist() {
+  List<AudioSource> playlist = [];
+  for (var item in degiskenler.listDinle) {
+    playlist.add(
+      AudioSource.uri(
+        Uri.parse(item['url']),
+        tag: MediaItem(
+          id: '${item['sira_no']}',
+          album: item['parca_adi'],
+          title: item['parca_adi'],
+          artUri: Uri.parse(
+            "${degiskenler.kaynakYolu}/atesiask/bahar.jpg",
+          ),
+          artist: item['seslendiren'],
+        ),
+      ),
+    );
+  }
+  _audioService.setPlaylist(playlist);
+}
+
+Future<void> initializeAudioService() async {
+  _audioService.init();
+}
+
+void arkaplanIslemleri() async {
+  degiskenler.addListenerForVariable("versionMenba",
+      () => DegiskenlerListener("versionMenba", degiskenler.versionMenba));
+  degiskenler.addListenerForVariable("listDinle",
+      () => DegiskenlerListener("listDinle", degiskenler.listDinle));
+
+  final Future<Map<String, dynamic>> jsonMenba =
+      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
+  final Future<Map<String, dynamic>> jsonSozler =
+      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
+
+  //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+  // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
+  /*Timer(Duration(seconds: 5), () {
+        _showDialogStreamController.add(false);
+      });*/
+
+  jsonSozler.then((jsonDataMap) {
+    if (jsonDataMap.containsKey("sozler")) {
+      final List<dynamic> sozlerListesi = jsonDataMap["sozler"];
+      if (sozlerListesi.isNotEmpty) {
+        final Random random = Random();
+        final int randomIndex = random.nextInt(sozlerListesi.length);
+        final String secilenSoz = sozlerListesi[randomIndex];
+        _akanYazi = AkanYazi(secilenSoz);
+        print("Rastgele Seçilen Söz: $secilenSoz");
+      } else {
+        print("Söz listesi boş.");
+      }
+    } else {
+      print("Verilerde 'sozler' anahtarı bulunamadı.");
+    }
+  });
+  jsonMenba.then((jsonData) {
+    int versiyon = jsonData["versiyon"];
+    //print("versiyon: $versiyon");
+
+    int dinlemeListesiID = jsonData["aktifliste"]["dinlemeListesiID"];
+    //print("dinlemeListesiID: $dinlemeListesiID");
+
+    List<dynamic> dinlemeListeleri = jsonData["dinlemeListeleri"];
+    for (var item in dinlemeListeleri) {
+      int id = item["id"];
+      String link = item["link"];
+      String caption = item["caption"];
+      String explanation = item["explanation"];
+      if (id == dinlemeListesiID) {
+        compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json")
+            .then((data) {
+          degiskenler.listDinle = data["sesler"];
+          degiskenler.notifyListenersForVariable("listDinle");
+
+          //print(degiskenler.listDinle);
+        });
+      }
+      //print("id: $id, link: $link, caption: $caption, explanation: $explanation");
+    }
+
+    degiskenler.versionMenba = versiyon;
+    degiskenler.dinlemeListeleri = dinlemeListeleri;
+
+    //print(jsonData["aktifliste"]);
+  });
+
+  //print(result); // İşlem sonucunu burada kullanabilirsiniz
+}
+
+class EkranBoyutModel {
+  int altEkranBoyut;
+  int ustEkranBoyut;
+  int ustEkranAktifIndex;
+
+  EkranBoyutModel(
+      {required this.altEkranBoyut,
+      required this.ustEkranBoyut,
+      required this.ustEkranAktifIndex});
+}
+class EkranBoyutNotifier extends ChangeNotifier {
+  EkranBoyutModel _ekranBoyutModel = EkranBoyutModel(
+      altEkranBoyut: 2, ustEkranBoyut: 8, ustEkranAktifIndex: 0);
+
+  int get altEkranBoyut => _ekranBoyutModel.altEkranBoyut;
+
+  int get ustEkranBoyut => _ekranBoyutModel.ustEkranBoyut;
+
+  int get ustEkranAktifIndex => _ekranBoyutModel.ustEkranAktifIndex;
+
+  set altEkranBoyut(int value) {
+    _ekranBoyutModel.altEkranBoyut = value;
+    notifyListeners();
+  }
+
+  set ustEkranBoyut(int value) {
+    _ekranBoyutModel.ustEkranBoyut = value;
+    notifyListeners();
+  }
+
+  set ustEkranAktifIndex(int value) {
+    _ekranBoyutModel.ustEkranAktifIndex = value;
+    notifyListeners();
+  }
+}
+class AudioInfoNotifier with ChangeNotifier {
+
+  static AudioInfoNotifier _instance = AudioInfoNotifier._();
+  AudioInfoNotifier._(); // Private constructor
+  static AudioInfoNotifier getInstance() => _instance;
+
+  String _trackName = '...';
+  String _artistName = '.';
+  bool _isPlaying= false;
+
+  String get trackName => _trackName;
+  String get artistName => _artistName;
+  bool get isPlaying => _isPlaying;
+
+  set TrackName(String trackName) {
+    _trackName = trackName;
+    notifyListeners();
+  }
+  set ArtistName(String artistName) {
+    _artistName = artistName;
+    notifyListeners();
+  }
+  set IsPlaying(bool isPlaying) {
+    _isPlaying = isPlaying;
+    notifyListeners();
+  }
+
+  void setTrackInfo(bool isPlaying,String trackName, String artistName) {
+    _trackName = trackName;
+    _artistName = artistName;
+    _isPlaying=isPlaying;
+    notifyListeners();
+  }
+}
+
+class PlaybackControlsWidget extends StatefulWidget {
+  @override
+  _PlaybackControlsWidgetState createState() => _PlaybackControlsWidgetState();
+}
+class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+  late AudioInfoNotifier _audioInfoNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+
+  void updateTrack() {
+    /*setState(() {
+      //_audioInfoNotifier.setTrackInfo(_audioService.getCurrentTrackName(), _audioService.getCurrentTrackName2());
+    });*/
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+    _audioInfoNotifier = Provider.of<AudioInfoNotifier>(context, listen: true);
+
+    bool showTrackNames = ekranBoyutNotifier.altEkranBoyut >= 2;
+    late IconData playPauseIcon=_audioInfoNotifier.isPlaying
+        ? FontAwesomeIcons.pause
+        : FontAwesomeIcons.play;
+
+    return Container(
+      /*padding: EdgeInsets.all(16.0),*/
+      decoration: showTrackNames
+          ? const BoxDecoration(
+              color: Colors.black,
+            )
+          : const BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(27.0),
+                topRight: Radius.circular(27.0),
+              ),
+            ),
+      child: Column(
+        children: [
+          if (showTrackNames) // Sadece altEkranBoyut > 2 olduğunda görüntülenecek
+            (Column(
+              children: [
+                Text(
+                  _audioInfoNotifier.trackName,
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  _audioInfoNotifier.artistName,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            )),
+          /*SizedBox(height: 16.0),*/
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              if (showTrackNames)
+                IconButton(
+                  onPressed: () {
+                    ekranBoyutNotifier.ustEkranAktifIndex = 1;
+                    ekranBoyutNotifier.altEkranBoyut = 1;
+                    ekranBoyutNotifier.ustEkranBoyut = 9;
+                  },
+                  icon: Icon(
+                    FontAwesomeIcons.list,
+                    color: Colors.white,
+                    size: 36.0,
+                  ),
+                )
+              else
+                IconButton(
+                  onPressed: () {
+                    ekranBoyutNotifier.ustEkranAktifIndex = 0;
+                    ekranBoyutNotifier.altEkranBoyut = 2;
+                    ekranBoyutNotifier.ustEkranBoyut = 8;
+                  },
+                  icon: Icon(
+                    FontAwesomeIcons.arrowLeft,
+                    color: Colors.white,
+                    size: 36.0,
+                  ),
+                ),
+              IconButton(
+                onPressed: () {
+                  _audioService.previous();
+                  updateTrack();
+                },
+                icon: const Icon(
+                  FontAwesomeIcons.backwardStep,
+                  color: Colors.white,
+                  size: 36.0,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  _audioService.play_pause();
+                  updateTrack();
+                },
+                icon: Icon(
+                  playPauseIcon,
+                  color: Colors.white,
+                  size: 36.0,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  _audioService.next();
+                  updateTrack();
+                },
+                icon: const Icon(
+                  FontAwesomeIcons.forwardStep,
+                  color: Colors.white,
+                  size: 36.0,
+                ),
+              ),
+            ],
+          ),
+          // Add some spacing between the row and column
         ],
       ),
     );
