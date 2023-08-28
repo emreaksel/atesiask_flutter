@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:bizidealcennetine/yaveran/Buttons.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -506,20 +507,13 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
     super.initState();
   }
 
-
-  void updateTrack() {
-    /*setState(() {
-      //_audioInfoNotifier.setTrackInfo(_audioService.getCurrentTrackName(), _audioService.getCurrentTrackName2());
-    });*/
-  }
-
   @override
   Widget build(BuildContext context) {
     ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
     _audioInfoNotifier = Provider.of<AudioInfoNotifier>(context, listen: true);
 
     bool showTrackNames = ekranBoyutNotifier.altEkranBoyut >= 2;
-    late IconData playPauseIcon=_audioInfoNotifier.isPlaying
+    IconData playPauseIcon=_audioInfoNotifier.isPlaying
         ? FontAwesomeIcons.pause
         : FontAwesomeIcons.play;
 
@@ -538,7 +532,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
             ),
       child: Column(
         children: [
-          if (showTrackNames) // Sadece altEkranBoyut > 2 olduğunda görüntülenecek
+          /*if (showTrackNames) // Sadece altEkranBoyut > 2 olduğunda görüntülenecek
             (Column(
               children: [
                 Text(
@@ -551,7 +545,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                 ),
               ],
             )),
-          /*SizedBox(height: 16.0),*/
+          *//*SizedBox(height: 16.0),*//*
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -584,7 +578,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               IconButton(
                 onPressed: () {
                   _audioService.previous();
-                  updateTrack();
                 },
                 icon: const Icon(
                   FontAwesomeIcons.backwardStep,
@@ -595,7 +588,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               IconButton(
                 onPressed: () {
                   _audioService.play_pause();
-                  updateTrack();
                 },
                 icon: Icon(
                   playPauseIcon,
@@ -606,7 +598,6 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
               IconButton(
                 onPressed: () {
                   _audioService.next();
-                  updateTrack();
                 },
                 icon: const Icon(
                   FontAwesomeIcons.forwardStep,
@@ -615,10 +606,15 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
                 ),
               ),
             ],
-          ),
+          ),*/
           // Add some spacing between the row and column
+        const AudioControlButtons(),
         ],
       ),
     );
   }
 }
+
+
+
+

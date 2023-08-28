@@ -5,6 +5,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'Notifier.dart';
+
 class AudioService {
   static AudioPlayer? _player;
   static BehaviorSubject<Duration>? _positionSubject;
@@ -16,6 +18,15 @@ class AudioService {
   AudioService(this._audioInfoNotifier);
 
   final currentSongTitleNotifier = ValueNotifier<String>('');
+
+  //final currentSongTitleNotifier = ValueNotifier<String>('');
+  final playlistNotifier = ValueNotifier<List<String>>([]);
+  //final progressNotifier = ProgressNotifier();
+  final repeatButtonNotifier = RepeatButtonNotifier();
+  final isFirstSongNotifier = ValueNotifier<bool>(true);
+  static final playButtonNotifier = PlayButtonNotifier();
+  final isLastSongNotifier = ValueNotifier<bool>(true);
+  final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
 
   AudioPlayer get player {
     if (_player == null) {
@@ -60,13 +71,33 @@ class AudioService {
         setCurrentTrack(index);
 
       });
+      player.playerStateStream.listen((playerState) {
 
+        final isPlaying = playerState.playing;
+        final processingState = playerState.processingState;
+
+
+
+        if (processingState == ProcessingState.loading ||
+            processingState == ProcessingState.buffering) {
+          playButtonNotifier.value = ButtonState.loading;
+        } else if (!isPlaying) {
+          playButtonNotifier.value = ButtonState.paused;
+        } else if (processingState != ProcessingState.completed) {
+          playButtonNotifier.value = ButtonState.playing;
+        } else {
+          player.seek(Duration.zero);
+          player.pause();
+        }
+        print("TEST playerStateStream: ${isPlaying} ${playButtonNotifier.value}");
+      });
       _initialized = true;
 
 
 
     }
   }
+
   Future<void> setPlaylist(List<AudioSource> sources) async {
     try {
       await player.setAudioSource(ConcatenatingAudioSource(children: sources));
@@ -93,32 +124,48 @@ class AudioService {
       print("Geçersiz index numarası.");
     }*/
     // Güncellenen bilgileri AudioInfoNotifier aracılığıyla bildir
-    _audioInfoNotifier.setTrackInfo(player.playing, parca_adi, seslendiren);
+    //_audioInfoNotifier.setTrackInfo(player.playing, parca_adi, seslendiren);
   }
   Future<void> play() async {
+    print("TEST play: ${player.playing}");
     await player.play();
+    _audioInfoNotifier.setTrackInfo(true, parca_adi, seslendiren);
   }
   Future<void> pause() async {
+    print("TEST pause: ${player.playing}");
+    _audioInfoNotifier.setTrackInfo(false, parca_adi, seslendiren);
     await player.pause();
+
   }
   Future<void> play_pause() async {
-    if(player.playing) pause();
-    else play();
+    print("TEST play_pause: ${player.playing}");
+    if(player.playing) await pause();
+    else await play();
   }
   Future<void> next() async {
     await player.seekToNext();
+    if (player.playing) {
+      _audioInfoNotifier.setTrackInfo(true, parca_adi, seslendiren);
+    } else {
+      _audioInfoNotifier.setTrackInfo(false, parca_adi, seslendiren);
+    }
   }
-  void previous() {
-    player.seekToPrevious();
+  Future<void> previous() async {
+    await player.seekToPrevious();
+    if (player.playing) {
+      _audioInfoNotifier.setTrackInfo(true, parca_adi, seslendiren);
+    } else {
+      _audioInfoNotifier.setTrackInfo(false, parca_adi, seslendiren);
+    }
   }
-  void playAtIndex(int index) {
+  Future<void> playAtIndex(int index) async {
     if (index < 0 || index >= player.audioSource!.sequence.length) {
       print("Invalid index: $index");
       return;
     }
 
-    player.seek(Duration.zero, index: index);
-    play();
+    await player.seek(Duration.zero, index: index);
+    await play();
   }
   dynamic getCurrentTrackName() {
     print("Dinleniyor: ${parca_adi}");
@@ -136,6 +183,24 @@ class AudioService {
   }
 
 // Add more methods as needed...
-}
 
+
+
+
+  void onRepeatButtonPressed() {
+    // TODO
+  }
+
+  void onPreviousSongButtonPressed() {
+    // TODO
+  }
+
+  void onNextSongButtonPressed() {
+    // TODO
+  }
+
+  void onShuffleButtonPressed() async {
+    // TODO
+  }
+}
 
