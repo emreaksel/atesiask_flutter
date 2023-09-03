@@ -14,19 +14,18 @@ class AudioService {
   static String seslendiren="...";
   static List<MediaItem> parca_listesi=[];
 
-  AudioInfoNotifier _audioInfoNotifier;
-  AudioService(this._audioInfoNotifier);
-
-  final currentSongTitleNotifier = ValueNotifier<String>('');
-
+  static final progressNotifier  = ProgressNotifier();
+  static final currentSongTitleNotifier = ValueNotifier<String>('...');
+  static final currentSongSubTitleNotifier = ValueNotifier<String>('...');
   //final currentSongTitleNotifier = ValueNotifier<String>('');
-  final playlistNotifier = ValueNotifier<List<String>>([]);
+  static final playlistNotifier = ValueNotifier<List<String>>([]);
   //final progressNotifier = ProgressNotifier();
-  final repeatButtonNotifier = RepeatButtonNotifier();
-  final isFirstSongNotifier = ValueNotifier<bool>(true);
+  static final repeatButtonNotifier = RepeatButtonNotifier();
+  static final isFirstSongNotifier = ValueNotifier<bool>(true);
   static final playButtonNotifier = PlayButtonNotifier();
-  final isLastSongNotifier = ValueNotifier<bool>(true);
-  final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
+  static final isLastSongNotifier = ValueNotifier<bool>(true);
+  static final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
+  static bool _initialized = false;
 
   AudioPlayer get player {
     if (_player == null) {
@@ -42,7 +41,6 @@ class AudioService {
     return _positionSubject!;
   }
 
-  static bool _initialized = false;
 
   Future<void> init() async {
     if (!_initialized) {
@@ -91,6 +89,33 @@ class AudioService {
         }
         print("TEST playerStateStream: ${isPlaying} ${playButtonNotifier.value}");
       });
+      player.positionStream.listen((position) {
+        final oldState = progressNotifier.value;
+        progressNotifier.value = ProgressBarState(
+          current: position,
+          buffered: oldState.buffered,
+          total: oldState.total,
+        );
+      });
+      player.durationStream.listen((totalDuration) {
+        final oldState = progressNotifier.value;
+        progressNotifier.value = ProgressBarState(
+          current: oldState.current,
+          buffered: oldState.buffered,
+          total: totalDuration ?? Duration.zero,
+        );
+      });
+      player.bufferedPositionStream.listen((bufferedPosition) {
+        final oldState = progressNotifier.value;
+        progressNotifier.value = ProgressBarState(
+          current: oldState.current,
+          buffered: bufferedPosition,
+          total: oldState.total,
+        );
+      });
+      final shuffleEnabled = player.shuffleModeEnabled;
+      player.setShuffleModeEnabled(!shuffleEnabled);
+
       _initialized = true;
 
 
@@ -100,16 +125,22 @@ class AudioService {
 
   Future<void> setPlaylist(List<AudioSource> sources) async {
     try {
+      //if(!_initialized) await init();
       await player.setAudioSource(ConcatenatingAudioSource(children: sources));
       parca_listesi=sources.cast<MediaItem>();
+      next();
     } catch (e, stackTrace) {
       print("Error loading playlist: $e");
       print(stackTrace);
     }
   }
   setCurrentTrack(index){
-    parca_adi=degiskenler.listDinle[index]["parca_adi"];
-    seslendiren=degiskenler.listDinle[index]["seslendiren"];
+    if (index != null) {
+      parca_adi = degiskenler.listDinle[index]["parca_adi"];
+      seslendiren = degiskenler.listDinle[index]["seslendiren"];
+      currentSongTitleNotifier.value = parca_adi;
+      currentSongSubTitleNotifier.value = seslendiren;
+    }
     /*if (index >= 0 && index < parca_listesi.length) {
       // İstenilen index numarası geçerli bir aralıkta mı kontrol ediyoruz
       var desiredAudio = parca_listesi[index];
@@ -129,11 +160,9 @@ class AudioService {
   Future<void> play() async {
     print("TEST play: ${player.playing}");
     await player.play();
-    _audioInfoNotifier.setTrackInfo(true, parca_adi, seslendiren);
   }
   Future<void> pause() async {
     print("TEST pause: ${player.playing}");
-    _audioInfoNotifier.setTrackInfo(false, parca_adi, seslendiren);
     await player.pause();
 
   }
@@ -144,20 +173,14 @@ class AudioService {
   }
   Future<void> next() async {
     await player.seekToNext();
-    if (player.playing) {
-      _audioInfoNotifier.setTrackInfo(true, parca_adi, seslendiren);
-    } else {
-      _audioInfoNotifier.setTrackInfo(false, parca_adi, seslendiren);
-    }
   }
   Future<void> previous() async {
     await player.seekToPrevious();
-    if (player.playing) {
-      _audioInfoNotifier.setTrackInfo(true, parca_adi, seslendiren);
-    } else {
-      _audioInfoNotifier.setTrackInfo(false, parca_adi, seslendiren);
-    }
   }
+  Future<void> seek(Duration position) async {
+    player.seek(position);
+  }
+
   Future<void> playAtIndex(int index) async {
     if (index < 0 || index >= player.audioSource!.sequence.length) {
       print("Invalid index: $index");
@@ -167,6 +190,17 @@ class AudioService {
     await player.seek(Duration.zero, index: index);
     await play();
   }
+  Future<void> repeat() async {
+    if (repeatButtonNotifier.value == RepeatState.on) {
+      await player.setLoopMode(LoopMode.all);
+      repeatButtonNotifier.value = RepeatState.off;
+    }
+    else {
+      await player.setLoopMode(LoopMode.one);
+      repeatButtonNotifier.value = RepeatState.on;
+    }
+  }
+
   dynamic getCurrentTrackName() {
     print("Dinleniyor: ${parca_adi}");
     return parca_adi;

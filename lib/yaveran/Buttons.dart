@@ -1,19 +1,188 @@
-
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '../main.dart';
 import 'AudioService.dart';
 import 'Notifier.dart';
 
-AudioInfoNotifier audioInfoNotifier = AudioInfoNotifier.getInstance();
-final AudioService _audioService = AudioService(audioInfoNotifier); // AudioService nesnesini oluşturun
+final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
+double calculateIconSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
+  double screenHeight = MediaQuery.of(context).size.height;
+  double iconSize =
+      screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.17;
+  return iconSize;
+}
+double calculateFontSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
+  double screenHeight = MediaQuery.of(context).size.height;
+  double fontSize =
+      screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.09;
+  return fontSize;
+}
 
 class PlayButton extends StatelessWidget {
-  const PlayButton({Key? key}) : super(key: key);
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
   @override
   Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return ValueListenableBuilder<ButtonState>(
+      valueListenable: AudioService.playButtonNotifier,
+      builder: (_, value, __) {
+        switch (value) {
+          case ButtonState.paused:
+            return IconButton(
+              icon: const Icon(FontAwesomeIcons.play, color: Colors.pinkAccent),
+              iconSize: calculateIconSize(context, ekranBoyutNotifier),
+              // Dinamik ikon boyutu kullanılıyor
+              onPressed: () {
+                _audioService.play();
+              },
+            );
+          case ButtonState.playing || ButtonState.loading:
+            return IconButton(
+              icon: const Icon(FontAwesomeIcons.pause,
+                  color: Colors.deepOrangeAccent),
+              iconSize: calculateIconSize(context, ekranBoyutNotifier),
+              // Dinamik ikon boyutu kullanılıyor
+              onPressed: () {
+                _audioService.pause();
+              },
+            );
+        }
+      },
+    );
+  }
+}
+class CurrentSongTitle extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return ValueListenableBuilder<String>(
+      valueListenable: AudioService.currentSongTitleNotifier,
+      builder: (_, title, __) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: calculateFontSize(context, ekranBoyutNotifier),
+              // Dinamik font boyutu kullanılıyor
+              color: Colors.pinkAccent,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+class CurrentSongSubTitle extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return ValueListenableBuilder<String>(
+      valueListenable: AudioService.currentSongSubTitleNotifier,
+      builder: (_, title, __) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: calculateFontSize(context, ekranBoyutNotifier),
+              // Dinamik font boyutu kullanılıyor
+              color: Colors.pinkAccent,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+class SeekBar extends StatelessWidget {
+  const SeekBar({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 19.0),
+      // Kenarlara 16 piksellik padding ekleyin
+      child: ValueListenableBuilder<ProgressBarState>(
+        valueListenable: AudioService.progressNotifier,
+        builder: (_, value, __) {
+          return ProgressBar(
+            progress: value.current,
+            buffered: value.buffered,
+            total: value.total,
+            onSeek: (duration) {
+              _audioService.seek(duration);
+            },
+            progressBarColor: Colors.white,
+            baseBarColor: Colors.white.withOpacity(0.24),
+            bufferedBarColor: Colors.pinkAccent.withOpacity(0.24),
+            thumbColor: Color(0xFFFF0000),
+            barCapShape: BarCapShape.round,
+            timeLabelTextStyle: TextStyle(color: Colors.pinkAccent),
+            timeLabelLocation: TimeLabelLocation.sides,
+            barHeight: 5.0,
+            thumbRadius: 10.0,
+          );
+        },
+      ),
+    );
+  }
+}
+class RepeatButton extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return ValueListenableBuilder<RepeatState>(
+      valueListenable: AudioService.repeatButtonNotifier,
+      builder: (context, value, child) {
+        switch (value) {
+          case RepeatState.off:
+            return IconButton(
+                icon: const Icon(
+                  FontAwesomeIcons.shuffle,
+                  color: Colors.pinkAccent,
+                ),
+                iconSize: calculateIconSize(context, ekranBoyutNotifier),
+                onPressed: () {
+                  _audioService.repeat();
+                });
+          case RepeatState.on:
+            return IconButton(
+                icon: const Icon(
+                  FontAwesomeIcons.repeat,
+                  color: Colors.pinkAccent,
+                ),
+                iconSize: calculateIconSize(context, ekranBoyutNotifier),
+                onPressed: () {
+                  _audioService.repeat();
+                });
+        }
+      },
+    );
+  }
+}
+class PreviousSongButton extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
     return ValueListenableBuilder<ButtonState>(
       valueListenable: AudioService.playButtonNotifier,
       builder: (_, value, __) {
@@ -25,114 +194,144 @@ class PlayButton extends StatelessWidget {
               height: 32.0,
               child: const CircularProgressIndicator(),
             );
-          case ButtonState.paused:
+          case ButtonState.paused || ButtonState.playing:
             return IconButton(
-                icon: const Icon(FontAwesomeIcons.play, color: Colors.indigo,),
-                iconSize: 32.0,
-                onPressed:(){
-                  _audioService.play();
-                }
-            );
-          case ButtonState.playing:
-            return IconButton(
-                icon: const Icon(FontAwesomeIcons.pause, color: Colors.deepOrangeAccent,),
-                iconSize: 32.0,
-                onPressed:(){
-                  _audioService.pause();
-                }
-            );
+                icon: const Icon(
+                  FontAwesomeIcons.backwardStep,
+                  color: Colors.pinkAccent,
+                ),
+                iconSize: calculateIconSize(context, ekranBoyutNotifier),
+                onPressed: () {
+                  _audioService.previous();
+                });
         }
-      },
-    );
-  }
-}
-class CurrentSongTitle extends StatelessWidget {
-  const CurrentSongTitle({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: _audioService.currentSongTitleNotifier,
-      builder: (_, title, __) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Text(title, style: TextStyle(fontSize: 40)),
-        );
-      },
-    );
-  }
-}
-class RepeatButton extends StatelessWidget {
-  const RepeatButton({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<RepeatState>(
-      valueListenable: _audioService.repeatButtonNotifier,
-      builder: (context, value, child) {
-        Icon icon;
-        switch (value) {
-          case RepeatState.off:
-            icon = Icon(Icons.repeat, color: Colors.grey);
-            break;
-          case RepeatState.repeatSong:
-            icon = Icon(Icons.repeat_one);
-            break;
-          case RepeatState.repeatPlaylist:
-            icon = Icon(Icons.repeat);
-            break;
-        }
-        return IconButton(
-          icon: icon,
-          onPressed: _audioService.onRepeatButtonPressed,
-        );
-      },
-    );
-  }
-}
-class PreviousSongButton extends StatelessWidget {
-  const PreviousSongButton({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _audioService.isFirstSongNotifier,
-      builder: (_, isFirst, __) {
-        return IconButton(
-          icon: Icon(Icons.skip_previous),
-          onPressed:
-          (isFirst) ? null : _audioService.onPreviousSongButtonPressed,
-        );
       },
     );
   }
 }
 class NextSongButton extends StatelessWidget {
-  const NextSongButton({Key? key}) : super(key: key);
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _audioService.isLastSongNotifier,
-      builder: (_, isLast, __) {
-        return IconButton(
-          icon: Icon(Icons.skip_next),
-          onPressed: (isLast) ? null : _audioService.onNextSongButtonPressed,
-        );
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return ValueListenableBuilder<ButtonState>(
+      valueListenable: AudioService.playButtonNotifier,
+      builder: (_, value, __) {
+        switch (value) {
+          case ButtonState.loading:
+            return Container(
+              margin: const EdgeInsets.all(8.0),
+              width: 32.0,
+              height: 32.0,
+              child: const CircularProgressIndicator(),
+            );
+          case ButtonState.paused || ButtonState.playing:
+            return IconButton(
+                icon: const Icon(
+                  FontAwesomeIcons.forwardStep,
+                  color: Colors.pinkAccent,
+                ),
+                iconSize: calculateIconSize(context, ekranBoyutNotifier),
+                onPressed: () {
+                  _audioService.next();
+                });
+        }
       },
     );
   }
 }
 
-class AudioControlButtons extends StatelessWidget {
-  const AudioControlButtons({Key? key}) : super(key: key);
+class ListButton extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
   @override
   Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return IconButton(
+        icon: const Icon(
+          FontAwesomeIcons.listCheck,
+          color: Colors.pinkAccent,
+        ),
+        iconSize: calculateIconSize(context, ekranBoyutNotifier),
+        onPressed: () {
+          ekranBoyutNotifier.ustEkranAktifIndex = 1;
+          ekranBoyutNotifier.altEkranBoyut = 17;
+          ekranBoyutNotifier.ustEkranBoyut = 83;
+        });
+  }
+}
+class BackButton extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return IconButton(
+        icon: const Icon(
+          FontAwesomeIcons.arrowLeft,
+          color: Colors.pinkAccent,
+        ),
+        iconSize: calculateIconSize(context, ekranBoyutNotifier),
+        onPressed: () {
+          ekranBoyutNotifier.ustEkranAktifIndex = 0;
+          ekranBoyutNotifier.altEkranBoyut = 20;
+          ekranBoyutNotifier.ustEkranBoyut = 80;
+        });
+  }
+}
+
+class AudioControlButtons extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+    bool showTrackNames = ekranBoyutNotifier.altEkranBoyut >= 20;
+
     return Container(
-      height: 60,
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      decoration: showTrackNames
+          ? const BoxDecoration(
+              color: Colors.black,
+            )
+          : const BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(27.0),
+                topRight: Radius.circular(27.0),
+              ),
+            ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center, // Dikeyde ortala
         children: [
-          RepeatButton(),
-          PreviousSongButton(),
-          PlayButton(),
-          NextSongButton(),
+          if(showTrackNames) Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  CurrentSongTitle(),
+                  CurrentSongSubTitle(),
+                  SeekBar(),
+                ],
+              )
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              if (showTrackNames)
+                ListButton()
+              else
+                BackButton(),
+              PreviousSongButton(),
+              PlayButton(),
+              NextSongButton(),
+              RepeatButton(),
+            ],
+          ),
         ],
       ),
     );

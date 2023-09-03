@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:bizidealcennetine/yaveran/Buttons.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
+import 'package:bizidealcennetine/yaveran/Notifier.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +18,7 @@ import 'yaveran/JsonHelper.dart';
 import 'yaveran/AudioService.dart';
 
 final Degiskenler degiskenler = Degiskenler();
-AudioInfoNotifier audioInfoNotifier = AudioInfoNotifier.getInstance();
-final AudioService _audioService = AudioService(audioInfoNotifier); // AudioService nesnesini oluşturun
+final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
 AkanYazi _akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
 ListeWidget _listeWidget = ListeWidget(songList: []);
 
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SplashScreen(),
+      home: MainScreen(),//SplashScreen(),
       /*Scaffold(
         body: SafeArea(
           child: MyCustomLayout(),
@@ -45,9 +45,7 @@ class MainScreen extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => EkranBoyutNotifier()),
-        ChangeNotifierProvider.value(
-          value: AudioInfoNotifier.getInstance(),
-        ),
+
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -63,6 +61,77 @@ class MyCustomLayout extends StatefulWidget {
   @override
   _MyCustomLayoutState createState() => _MyCustomLayoutState();
 }
+class _MyCustomLayoutState extends State<MyCustomLayout> {
+  final StreamController<bool> _showDialogStreamController =
+  StreamController<bool>();
+
+  @override
+  void dispose() {
+    _showDialogStreamController.close();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void closeDialog() {
+    //Değişen değeri bildirerek listener'ları tetikleyin.
+    //degiskenler.notifyListenersForVariable("versionMenba");
+    _showDialogStreamController.add(false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context);
+
+    return Stack(
+      children: [
+        Container(
+          color: Colors.transparent,
+          child: Column(
+            children: [
+              Expanded(
+                flex: ekranBoyutNotifier.ustEkranBoyut,
+                child: IndexedStack(
+                  index: ekranBoyutNotifier.ustEkranAktifIndex,
+                  children: [
+                    KenBurnsViewWidget(),
+                    _listeWidget,
+                    // Diğer widget'ları buraya ekleyebilirsiniz
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: ekranBoyutNotifier.altEkranBoyut,
+                // flex değeri güncel flexValue'ya göre ayarlandı,
+                child: AudioControlButtons(),
+              ),
+            ],
+          ),
+        ),
+        Positioned.fill(
+          child: StreamBuilder<bool>(
+            stream: _showDialogStreamController.stream,
+            initialData: false,
+            builder: (context, snapshot) {
+              if (snapshot.data == true) {
+                return Align(
+                  alignment: Alignment.center,
+                  child: CustomDialog(onClose: closeDialog),
+                );
+              } else {
+                return Container(); // Diyaloğu gizle
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class KenBurnsViewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -164,76 +233,6 @@ class ListeWidget extends StatelessWidget {
   }
 }
 
-class _MyCustomLayoutState extends State<MyCustomLayout> {
-  final StreamController<bool> _showDialogStreamController =
-      StreamController<bool>();
-
-  @override
-  void dispose() {
-    _showDialogStreamController.close();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void closeDialog() {
-    //Değişen değeri bildirerek listener'ları tetikleyin.
-    //degiskenler.notifyListenersForVariable("versionMenba");
-    _showDialogStreamController.add(false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context);
-
-    return Stack(
-      children: [
-        Container(
-          color: Colors.transparent,
-          child: Column(
-            children: [
-              Expanded(
-                flex: ekranBoyutNotifier.ustEkranBoyut,
-                child: IndexedStack(
-                  index: ekranBoyutNotifier.ustEkranAktifIndex,
-                  children: [
-                    KenBurnsViewWidget(),
-                    _listeWidget,
-                    // Diğer widget'ları buraya ekleyebilirsiniz
-                  ],
-                ),
-              ),
-              Expanded(
-                flex: ekranBoyutNotifier.altEkranBoyut,
-                // flex değeri güncel flexValue'ya göre ayarlandı,
-                child: PlaybackControlsWidget(),
-              ),
-            ],
-          ),
-        ),
-        Positioned.fill(
-          child: StreamBuilder<bool>(
-            stream: _showDialogStreamController.stream,
-            initialData: false,
-            builder: (context, snapshot) {
-              if (snapshot.data == true) {
-                return Align(
-                  alignment: Alignment.center,
-                  child: CustomDialog(onClose: closeDialog),
-                );
-              } else {
-                return Container(); // Diyaloğu gizle
-              }
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 Future<Map<String, dynamic>> getirJsonData(String yol) async {
   final HttpService _httpService = HttpService();
@@ -277,7 +276,7 @@ class CustomDialog extends StatelessWidget {
   }
 }
 
-class SplashScreen extends StatefulWidget {
+/*class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -315,7 +314,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-}
+}*/
 
 void DegiskenlerListener(String tag, dynamic degisenDeger) {
   // Değişen değeri işleyin
@@ -355,9 +354,13 @@ void setPlaylist() {
 
 Future<void> initializeAudioService() async {
   await _audioService.init();
+  print("initializeAudioServiceinitializeAudioServiceinitializeAudioServiceinitializeAudioService");
 }
 
 void arkaplanIslemleri() async {
+
+  _audioService.init();
+
   degiskenler.addListenerForVariable("versionMenba",
       () => DegiskenlerListener("versionMenba", degiskenler.versionMenba));
   degiskenler.addListenerForVariable("listDinle",
@@ -424,41 +427,7 @@ void arkaplanIslemleri() async {
   //print(result); // İşlem sonucunu burada kullanabilirsiniz
 }
 
-class EkranBoyutModel {
-  int altEkranBoyut;
-  int ustEkranBoyut;
-  int ustEkranAktifIndex;
-
-  EkranBoyutModel(
-      {required this.altEkranBoyut,
-      required this.ustEkranBoyut,
-      required this.ustEkranAktifIndex});
-}
-class EkranBoyutNotifier extends ChangeNotifier {
-  EkranBoyutModel _ekranBoyutModel = EkranBoyutModel(
-      altEkranBoyut: 2, ustEkranBoyut: 8, ustEkranAktifIndex: 0);
-
-  int get altEkranBoyut => _ekranBoyutModel.altEkranBoyut;
-
-  int get ustEkranBoyut => _ekranBoyutModel.ustEkranBoyut;
-
-  int get ustEkranAktifIndex => _ekranBoyutModel.ustEkranAktifIndex;
-
-  set altEkranBoyut(int value) {
-    _ekranBoyutModel.altEkranBoyut = value;
-    notifyListeners();
-  }
-
-  set ustEkranBoyut(int value) {
-    _ekranBoyutModel.ustEkranBoyut = value;
-    notifyListeners();
-  }
-
-  set ustEkranAktifIndex(int value) {
-    _ekranBoyutModel.ustEkranAktifIndex = value;
-    notifyListeners();
-  }
-}
+/*
 class AudioInfoNotifier with ChangeNotifier {
 
   static AudioInfoNotifier _instance = AudioInfoNotifier._();
@@ -493,7 +462,8 @@ class AudioInfoNotifier with ChangeNotifier {
     notifyListeners();
   }
 }
-
+*/
+/*
 class PlaybackControlsWidget extends StatefulWidget {
   @override
   _PlaybackControlsWidgetState createState() => _PlaybackControlsWidgetState();
@@ -518,7 +488,7 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
         : FontAwesomeIcons.play;
 
     return Container(
-      /*padding: EdgeInsets.all(16.0),*/
+      *//*padding: EdgeInsets.all(16.0),*//*
       decoration: showTrackNames
           ? const BoxDecoration(
               color: Colors.black,
@@ -532,88 +502,12 @@ class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
             ),
       child: Column(
         children: [
-          /*if (showTrackNames) // Sadece altEkranBoyut > 2 olduğunda görüntülenecek
-            (Column(
-              children: [
-                Text(
-                  _audioInfoNotifier.trackName,
-                  style: TextStyle(color: Colors.white),
-                ),
-                Text(
-                  _audioInfoNotifier.artistName,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ],
-            )),
-          *//*SizedBox(height: 16.0),*//*
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              if (showTrackNames)
-                IconButton(
-                  onPressed: () {
-                    ekranBoyutNotifier.ustEkranAktifIndex = 1;
-                    ekranBoyutNotifier.altEkranBoyut = 1;
-                    ekranBoyutNotifier.ustEkranBoyut = 9;
-                  },
-                  icon: Icon(
-                    FontAwesomeIcons.list,
-                    color: Colors.white,
-                    size: 36.0,
-                  ),
-                )
-              else
-                IconButton(
-                  onPressed: () {
-                    ekranBoyutNotifier.ustEkranAktifIndex = 0;
-                    ekranBoyutNotifier.altEkranBoyut = 2;
-                    ekranBoyutNotifier.ustEkranBoyut = 8;
-                  },
-                  icon: Icon(
-                    FontAwesomeIcons.arrowLeft,
-                    color: Colors.white,
-                    size: 36.0,
-                  ),
-                ),
-              IconButton(
-                onPressed: () {
-                  _audioService.previous();
-                },
-                icon: const Icon(
-                  FontAwesomeIcons.backwardStep,
-                  color: Colors.white,
-                  size: 36.0,
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  _audioService.play_pause();
-                },
-                icon: Icon(
-                  playPauseIcon,
-                  color: Colors.white,
-                  size: 36.0,
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  _audioService.next();
-                },
-                icon: const Icon(
-                  FontAwesomeIcons.forwardStep,
-                  color: Colors.white,
-                  size: 36.0,
-                ),
-              ),
-            ],
-          ),*/
-          // Add some spacing between the row and column
-        const AudioControlButtons(),
+        AudioControlButtons(),
         ],
       ),
     );
   }
-}
+}*/
 
 
 
