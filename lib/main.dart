@@ -88,7 +88,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
 
     return Stack(
       children: [
-        Container(
+        /*Container(
           color: Colors.transparent,
           child: Column(
             children: [
@@ -108,6 +108,24 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
                 // flex değeri güncel flexValue'ya göre ayarlandı,
                 child: AudioControlButtons(),
               ),
+            ],
+          ),
+        ),*/
+        Container(
+          color: Colors.transparent,
+          child: Column(
+            children: [
+              Expanded(
+                child: IndexedStack(
+                  index: ekranBoyutNotifier.ustEkranAktifIndex,
+                  children: [
+                    KenBurnsViewWidget(),
+                    _listeWidget,
+                    // Diğer widget'ları buraya ekleyebilirsiniz
+                  ],
+                ),
+              ),
+              AudioControlButtons(),
             ],
           ),
         ),
@@ -167,41 +185,47 @@ class AkanYazi extends StatelessWidget {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    double yaziBoyutu =
-        screenHeight * 0.019; // Yüksekliğin %5'i kadar bir yazı boyutu
+    double yaziBoyutu = screenHeight * 0.019; // Yüksekliğin %5'i kadar bir yazı boyutu
 
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: TextStyle(fontSize: yaziBoyutu)),
-      textDirection: TextDirection.ltr,
-    )..layout();
+    String setEpigram(String text) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: TextStyle(fontSize: yaziBoyutu)),
+        textDirection: TextDirection.ltr,
+      )..layout();
 
-    double textWidth = painter.width;
-    int targetLength = (textWidth / 3.34)
-        .toInt(); // Yazının genişlik oranına göre hedef uzunluk hesaplayın
-    String finalText;
-
-    if (screenWidth > textWidth) {
-      finalText = text + ' ' * (screenWidth / 3.9).toInt();
-    } else {
-      int spacesToAdd = targetLength - text.length;
-      finalText = text + ' ' * spacesToAdd;
+      double textWidth = painter.width;
+      int targetLength = (textWidth / 3.34).toInt(); // Yazının genişlik oranına göre hedef uzunluk hesaplayın
+      String finalText;
+      if (screenWidth > textWidth) {
+        finalText = text + ' ' * (screenWidth / 3.9).toInt();
+      } else {
+        int spacesToAdd = targetLength - text.length;
+        finalText = text + ' ' * spacesToAdd;
+      }
+      return finalText;
     }
 
     return Container(
       padding: EdgeInsets.all(8.0),
       color: Colors.black.withOpacity(0.5),
-      child: TextScroll(
-        finalText,
-        mode: TextScrollMode.endless,
-        velocity: Velocity(pixelsPerSecond: Offset(50, 0)),
-        delayBefore: Duration(milliseconds: 500),
-        numberOfReps: 99999,
-        pauseBetween: Duration(milliseconds: 50),
-        style: TextStyle(color: Colors.white, fontSize: yaziBoyutu),
-        textAlign: TextAlign.right,
-        selectable: true,
+      child: ValueListenableBuilder<String>(
+        valueListenable: Degiskenler.currentEpigramNotifier,
+        builder: (_, title, __) {
+          return TextScroll(
+            setEpigram(title), // title değişkenini kullanmak istediğinizi varsayıyorum
+            mode: TextScrollMode.endless,
+            velocity: Velocity(pixelsPerSecond: Offset(50, 0)),
+            delayBefore: Duration(milliseconds: 500),
+            numberOfReps: 99999,
+            pauseBetween: Duration(milliseconds: 50),
+            style: TextStyle(color: Colors.white, fontSize: yaziBoyutu),
+            textAlign: TextAlign.right,
+            selectable: true,
+          );
+        },
       ),
     );
+
   }
 }
 
@@ -384,7 +408,8 @@ void arkaplanIslemleri() async {
         final Random random = Random();
         final int randomIndex = random.nextInt(sozlerListesi.length);
         final String secilenSoz = sozlerListesi[randomIndex];
-        _akanYazi = AkanYazi(secilenSoz);
+        Degiskenler.currentEpigramNotifier.value=secilenSoz;
+        //_akanYazi = AkanYazi(secilenSoz);
         print("Rastgele Seçilen Söz: $secilenSoz");
       } else {
         print("Söz listesi boş.");

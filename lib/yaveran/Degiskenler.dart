@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
+
 class Degiskenler {
   static final Degiskenler _instance = Degiskenler._internal();
   int versionMenba = 0;
@@ -7,6 +9,9 @@ class Degiskenler {
   //String kaynakYolu=".";
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
   String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
+
+  static final currentEpigramNotifier = ValueNotifier<String>('...');
+
 
   List<dynamic> dinlemeListeleri=[];
   List<dynamic> listSozler=[];
