@@ -1,4 +1,3 @@
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../main.dart';
 import 'AudioService.dart';
 import 'Notifier.dart';
+import 'audio_video_progress_bar.dart';
 
 final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
 double calculateIconSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
@@ -126,14 +126,16 @@ class SeekBar extends StatelessWidget {
               _audioService.seek(duration);
             },
             progressBarColor: Colors.white,
-            baseBarColor: Colors.white.withOpacity(0.24),
-            bufferedBarColor: Colors.pinkAccent.withOpacity(0.24),
+            baseBarColor: Colors.black,
+            bufferedBarColor: Colors.black,
             thumbColor: Color(0xFFFF0000),
             barCapShape: BarCapShape.round,
             timeLabelTextStyle: TextStyle(color: Colors.pinkAccent),
             timeLabelLocation: TimeLabelLocation.sides,
             barHeight: 5.0,
             thumbRadius: 10.0,
+            thumbBorderThickness: 3.0,
+            thumbBorderColor: Colors.black,
           );
         },
       ),
