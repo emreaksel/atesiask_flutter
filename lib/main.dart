@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:bizidealcennetine/yaveran/Buttons.dart';
+import 'package:bizidealcennetine/yaveran/widgets_audio.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:bizidealcennetine/yaveran/Notifier.dart';
 import 'package:flutter/cupertino.dart';
@@ -62,8 +62,7 @@ class MyCustomLayout extends StatefulWidget {
   _MyCustomLayoutState createState() => _MyCustomLayoutState();
 }
 class _MyCustomLayoutState extends State<MyCustomLayout> {
-  final StreamController<bool> _showDialogStreamController =
-  StreamController<bool>();
+  final StreamController<bool> _showDialogStreamController =  StreamController<bool>();
 
   @override
   void dispose() {

@@ -27,6 +27,91 @@ class AudioService {
   static final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
   static bool _initialized = false;
 
+
+/*
+  AudioService() {
+    if (!_initialized) {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+        androidNotificationChannelName: 'Audio playback',
+        androidNotificationOngoing: true,
+      );
+      _player = AudioPlayer();
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.speech());
+
+      _positionSubject = BehaviorSubject<Duration>();
+
+      _player!.playbackEventStream.listen((event) {
+        if (event.processingState == ProcessingState.completed) {
+          // Handle playback completion
+        }
+        _positionSubject!.add(event.updatePosition);
+      }, onError: (Object e, StackTrace stackTrace) {
+        print('A stream error occurred: $e');
+      });
+
+      player.currentIndexStream.listen((index) {
+        print("currentIndexStream $index");
+        setCurrentTrack(index);
+
+      });
+      player.playerStateStream.listen((playerState) {
+
+        final isPlaying = playerState.playing;
+        final processingState = playerState.processingState;
+
+
+
+        if (processingState == ProcessingState.loading ||
+            processingState == ProcessingState.buffering) {
+          playButtonNotifier.value = ButtonState.loading;
+        } else if (!isPlaying) {
+          playButtonNotifier.value = ButtonState.paused;
+        } else if (processingState != ProcessingState.completed) {
+          playButtonNotifier.value = ButtonState.playing;
+        } else {
+          player.seek(Duration.zero);
+          player.pause();
+        }
+        print("TEST playerStateStream: ${isPlaying} ${playButtonNotifier.value}");
+      });
+      player.positionStream.listen((position) {
+        final oldState = progressNotifier.value;
+        progressNotifier.value = ProgressBarState(
+          current: position,
+          buffered: oldState.buffered,
+          total: oldState.total,
+        );
+      });
+      player.durationStream.listen((totalDuration) {
+        final oldState = progressNotifier.value;
+        progressNotifier.value = ProgressBarState(
+          current: oldState.current,
+          buffered: oldState.buffered,
+          total: totalDuration ?? Duration.zero,
+        );
+      });
+      player.bufferedPositionStream.listen((bufferedPosition) {
+        final oldState = progressNotifier.value;
+        progressNotifier.value = ProgressBarState(
+          current: oldState.current,
+          buffered: bufferedPosition,
+          total: oldState.total,
+        );
+      });
+      final shuffleEnabled = player.shuffleModeEnabled;
+      player.setShuffleModeEnabled(!shuffleEnabled);
+
+      _initialized = true;
+
+
+
+    }
+  }
+*/
+
+
   AudioPlayer get player {
     if (_player == null) {
       throw Exception("AudioService has not been initialized.");
@@ -125,7 +210,7 @@ class AudioService {
 
   Future<void> setPlaylist(List<AudioSource> sources) async {
     try {
-      //if(!_initialized) await init();
+      if(!_initialized) await init();
       await player.setAudioSource(ConcatenatingAudioSource(children: sources));
       parca_listesi=sources.cast<MediaItem>();
       next();
