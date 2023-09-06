@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 class Degiskenler {
   static final Degiskenler _instance = Degiskenler._internal();
@@ -10,7 +11,8 @@ class Degiskenler {
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
   String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
 
-  static final currentEpigramNotifier = ValueNotifier<String>('...');
+  static var currentEpigramNotifier = ValueNotifier<String>('...');
+  static var songListNotifier = ValueNotifier<List<dynamic>>([]);
 
 
   List<dynamic> dinlemeListeleri=[];

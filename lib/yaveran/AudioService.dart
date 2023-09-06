@@ -1,5 +1,6 @@
 import 'package:audio_session/audio_session.dart';
 import 'package:bizidealcennetine/main.dart';
+import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
@@ -26,7 +27,6 @@ class AudioService {
   static final isLastSongNotifier = ValueNotifier<bool>(true);
   static final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
   static bool _initialized = false;
-
 
 /*
   AudioService() {
@@ -111,22 +111,18 @@ class AudioService {
   }
 */
 
-
   AudioPlayer get player {
     if (_player == null) {
       throw Exception("AudioService has not been initialized.");
     }
     return _player!;
   }
-
   BehaviorSubject<Duration> get positionSubject {
     if (_positionSubject == null) {
       throw Exception("AudioService has not been initialized.");
     }
     return _positionSubject!;
   }
-
-
   Future<void> init() async {
     if (!_initialized) {
       await JustAudioBackground.init(
@@ -150,7 +146,7 @@ class AudioService {
       });
 
       player.currentIndexStream.listen((index) {
-        print("currentIndexStream $index");
+        //print("currentIndexStream $index");
         setCurrentTrack(index);
 
       });
@@ -172,7 +168,7 @@ class AudioService {
           player.seek(Duration.zero);
           player.pause();
         }
-        print("TEST playerStateStream: ${isPlaying} ${playButtonNotifier.value}");
+        //print("TEST playerStateStream: ${isPlaying} ${playButtonNotifier.value}");
       });
       player.positionStream.listen((position) {
         final oldState = progressNotifier.value;
@@ -209,10 +205,13 @@ class AudioService {
   }
 
   Future<void> setPlaylist(List<AudioSource> sources) async {
+    //print("LAVANTA");
+
     try {
-      if(!_initialized) await init();
+      //if(!_initialized) await init();
       await player.setAudioSource(ConcatenatingAudioSource(children: sources));
-      parca_listesi=sources.cast<MediaItem>();
+      //Degiskenler.songListNotifier.value=sources;
+      //print("TESTTTTT ${Degiskenler.songListNotifier.value}");
       next();
     } catch (e, stackTrace) {
       print("Error loading playlist: $e");
@@ -243,16 +242,16 @@ class AudioService {
     //_audioInfoNotifier.setTrackInfo(player.playing, parca_adi, seslendiren);
   }
   Future<void> play() async {
-    print("TEST play: ${player.playing}");
+    //print("TEST play: ${player.playing}");
     await player.play();
   }
   Future<void> pause() async {
-    print("TEST pause: ${player.playing}");
+    //print("TEST pause: ${player.playing}");
     await player.pause();
 
   }
   Future<void> play_pause() async {
-    print("TEST play_pause: ${player.playing}");
+    //print("TEST play_pause: ${player.playing}");
     if(player.playing) await pause();
     else await play();
   }
@@ -265,7 +264,6 @@ class AudioService {
   Future<void> seek(Duration position) async {
     player.seek(position);
   }
-
   Future<void> playAtIndex(int index) async {
     if (index < 0 || index >= player.audioSource!.sequence.length) {
       print("Invalid index: $index");
@@ -273,6 +271,23 @@ class AudioService {
     }
 
     await player.seek(Duration.zero, index: index);
+    await play();
+  }
+  Future<void> playAtId(int id) async {
+    if (id < 0 || id >= player.audioSource!.sequence.length) {
+      print("Invalid index: $id");
+      return;
+    }
+    var songid=-1;
+    for (var item in Degiskenler.songListNotifier.value){
+      //print(item);
+      if(item['sira_no']==id) {
+        songid=id;
+        break;
+      }
+    }
+    if(songid==-1) return;
+    await player.seek(Duration.zero, index: songid-1);
     await play();
   }
   Future<void> repeat() async {

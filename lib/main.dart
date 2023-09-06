@@ -20,7 +20,6 @@ import 'yaveran/AudioService.dart';
 final Degiskenler degiskenler = Degiskenler();
 final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
 AkanYazi _akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
-ListeWidget _listeWidget = ListeWidget(songList: []);
 
 void main() {
   runApp(MyApp());
@@ -119,7 +118,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
                   index: ekranBoyutNotifier.ustEkranAktifIndex,
                   children: [
                     KenBurnsViewWidget(),
-                    _listeWidget,
+                    ListeWidget(),
                     // Diğer widget'ları buraya ekleyebilirsiniz
                   ],
                 ),
@@ -228,11 +227,11 @@ class AkanYazi extends StatelessWidget {
   }
 }
 
-class ListeWidget extends StatelessWidget {
-  final List<dynamic> songList;
-
-  ListeWidget({required this.songList});
-
+/*class ListeWidget extends StatefulWidget {
+  @override
+  _ListeWidgetState createState() => _ListeWidgetState();
+}
+class _ListeWidgetState extends State<ListeWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,10 +239,10 @@ class ListeWidget extends StatelessWidget {
         title: Center(child: Text('Dinle')),
       ),
       body: ListView.builder(
-        itemCount: songList.length,
+        itemCount: degiskenler.listDinle.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(songList[index]['parca_adi']),
+            title: Text(degiskenler.listDinle[index]['parca_adi']),
             onTap: () {
               // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
               // Örneğin, çalma işlemi veya şarkı ayrıntıları sayfasına yönlendirme
@@ -254,7 +253,95 @@ class ListeWidget extends StatelessWidget {
       ),
     );
   }
+}*/
+class ListeWidget extends StatefulWidget {
+  @override
+  _ListeWidgetState createState() => _ListeWidgetState();
 }
+class _ListeWidgetState extends State<ListeWidget> {
+  TextEditingController _searchController = TextEditingController(); // Arama çubuğu kontrolcüsü
+  List<dynamic> filteredSongList = []; // Filtrelenmiş şarkı listesi
+  String searchText="";
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(child: Text('Dinle..')),
+        actions: [
+          // Arama çubuğunu ekliyoruz
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              // Arama çubuğuna tıklandığında bir şey yapabilirsiniz
+              // Örneğin, arama işlemini başlatmak için burada bir işlev çağırabilirsiniz.
+            },
+          ),
+        ],
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(60.0), // Arama çubuğu yüksekliği
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController, // Arama çubuğu kontrolcüsü
+              onChanged: (value) {
+                // Arama çubuğundaki değeri alın
+                searchText = value.toLowerCase(); // Aramayı küçük harfe çevirin (büyük/küçük harf duyarlılığı olmadan arama yapmak için)
+
+                // Filtreleme işlemini gerçekleştirin ve sonucu yeni bir liste olarak saklayın
+                List<dynamic> filteredList = Degiskenler.songListNotifier.value.where((song) {
+                  String songName = song['parca_adi'].toLowerCase(); // Şarkı adını küçük harfe çevirin
+                  String singerName = song['seslendiren'].toLowerCase(); // Seslendiren adını küçük harfe çevirin
+
+                  // Şarkı adı veya seslendiren adı içinde aranan metni içeren öğeleri filtreleyin
+                  return songName.contains(searchText) || singerName.contains(searchText);
+                }).toList();
+
+                // Filtrelenmiş liste ile UI'yi güncelleyin
+                setState(() {
+                  filteredSongList = filteredList;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: "Ara...", // Arama çubuğunda görüntülenen metin
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: ValueListenableBuilder<List<dynamic>>(
+        valueListenable: Degiskenler.songListNotifier,
+        builder: (context, songList, child) {
+          // Filtrelenmiş liste veya orijinal liste üzerinden dönün
+          List<dynamic> displayList = filteredSongList.isNotEmpty ? filteredSongList : songList;
+
+          if (filteredSongList.isEmpty && searchText.isNotEmpty) {
+            // Arama sonucunda eşleşen öğe yoksa hiçbir şey göstermeyin
+            return Center(
+              child: Text("Hiçbir sonuç bulunamadı."),
+            );
+          } else {
+            // Eşleşen öğeler varsa listeyi gösterin
+            return ListView.builder(
+              itemCount: displayList.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(displayList[index]['parca_adi'] + " [" + displayList[index]['seslendiren'] + "]"),
+                  onTap: () {
+                    // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
+                    // Örneğin, çalma işlemi veya şarkı ayrıntıları sayfasına yönlendirme
+                    _audioService.playAtId(displayList[index]['sira_no']);
+                  },
+                );
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+
 
 
 Future<Map<String, dynamic>> getirJsonData(String yol) async {
@@ -339,24 +426,16 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }*/
 
-void DegiskenlerListener(String tag, dynamic degisenDeger) {
-  // Değişen değeri işleyin
-  if (tag == "listDinle") {
-    setPlaylist();
-    setListeWidget();
-  } else if (tag == "ekranDegisti") {
-    print("degiskenler.ekranDegisti++;");
-  }
-  //print("Değişen değer: $degisenDeger");
-}
+void setPlaylist(data) {
+  print("LAVANTA ${data[0]}");
 
-void setListeWidget() {
-  _listeWidget = ListeWidget(songList: degiskenler.listDinle);
-}
+  degiskenler.listDinle=data;
+  Degiskenler.songListNotifier.value=data;
 
-void setPlaylist() {
   List<AudioSource> playlist = [];
-  for (var item in degiskenler.listDinle) {
+  for (var item in data) {
+    //print("LAVANTA ${item}");
+
     playlist.add(
       AudioSource.uri(
         Uri.parse(item['url']),
@@ -365,34 +444,30 @@ void setPlaylist() {
           album: item['parca_adi'],
           title: item['parca_adi'],
           artUri: Uri.parse(
-            "${degiskenler.kaynakYolu}/atesiask/bahar.jpg",
+            "${degiskenler.kaynakYolu}/atesiask/bahar11.jpg",
           ),
           artist: item['seslendiren'],
         ),
       ),
     );
   }
+
   _audioService.setPlaylist(playlist);
 }
 
+/*
 Future<void> initializeAudioService() async {
   await _audioService.init();
   print("initializeAudioServiceinitializeAudioServiceinitializeAudioServiceinitializeAudioService");
 }
+*/
 
 void arkaplanIslemleri() async {
 
   _audioService.init();
 
-  degiskenler.addListenerForVariable("versionMenba",
-      () => DegiskenlerListener("versionMenba", degiskenler.versionMenba));
-  degiskenler.addListenerForVariable("listDinle",
-      () => DegiskenlerListener("listDinle", degiskenler.listDinle));
-
-  final Future<Map<String, dynamic>> jsonMenba =
-      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
-  final Future<Map<String, dynamic>> jsonSozler =
-      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
+  final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
+  final Future<Map<String, dynamic>> jsonSozler = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
 
   //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
   // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
@@ -413,7 +488,8 @@ void arkaplanIslemleri() async {
       } else {
         print("Söz listesi boş.");
       }
-    } else {
+    }
+    else {
       print("Verilerde 'sozler' anahtarı bulunamadı.");
     }
   });
@@ -433,9 +509,8 @@ void arkaplanIslemleri() async {
       if (id == dinlemeListesiID) {
         compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json")
             .then((data) {
-          degiskenler.listDinle = data["sesler"];
-          degiskenler.notifyListenersForVariable("listDinle");
-
+          List<dynamic> listDinle=data["sesler"];
+          setPlaylist(listDinle);
           //print(degiskenler.listDinle);
         });
       }
