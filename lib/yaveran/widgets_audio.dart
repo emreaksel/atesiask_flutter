@@ -12,13 +12,13 @@ final AudioService _audioService = AudioService(); // AudioService nesnesini olu
 double calculateIconSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
   double screenHeight = MediaQuery.of(context).size.height;
   double iconSize =
-      screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.17;
+      screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.19;
   return iconSize;
 }
 double calculateFontSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
   double screenHeight = MediaQuery.of(context).size.height;
   double fontSize =
-      screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.09;
+      screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.11;
   return fontSize;
 }
 
@@ -321,19 +321,22 @@ class AudioControlButtons extends StatelessWidget {
               )
             ],
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              if (showTrackNames)
-                ListButton()
-              else
-                BackButton(),
-              PreviousSongButton(),
-              PlayButton(),
-              NextSongButton(),
-              RepeatButton(),
-            ],
-          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0), // Üst ve alt tarafta 16 birimlik padding ekler
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                if (showTrackNames)
+                  ListButton()
+                else
+                  BackButton(),
+                PreviousSongButton(),
+                PlayButton(),
+                NextSongButton(),
+                RepeatButton(),
+              ],
+            ),
+          )
         ],
       ),
     );

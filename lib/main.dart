@@ -341,13 +341,15 @@ class _ListeWidgetState extends State<ListeWidget> {
             return Center(
               child: Text("Hiçbir sonuç bulunamadı."),
             );
-          } else {
+          } //filter bulunamadı
+          else {
             // Eşleşen öğeler varsa listeyi gösterin
             return ListView.builder(
               itemCount: displayList.length,
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(displayList[index]['parca_adi'] + " [" + displayList[index]['seslendiren'] + "]"),
+                  //leading: Image.asset('images/atesiask.png'), // Fotoğrafı ekleyin
                   onTap: () {
                     // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
                     // Örneğin, çalma işlemi veya şarkı ayrıntıları sayfasına yönlendirme
