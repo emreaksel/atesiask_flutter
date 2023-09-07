@@ -291,10 +291,31 @@ class _ListeWidgetState extends State<ListeWidget> {
                 List<dynamic> filteredList = Degiskenler.songListNotifier.value.where((song) {
                   String songName = song['parca_adi'].toLowerCase(); // Şarkı adını küçük harfe çevirin
                   String singerName = song['seslendiren'].toLowerCase(); // Seslendiren adını küçük harfe çevirin
-
+                  String replaceTurkishCharacters(String text) {
+                    text = text.replaceAll("â", "a");
+                    text = text.replaceAll("ş", "s");
+                    text = text.replaceAll("ö", "o");
+                    text = text.replaceAll("ü", "u");
+                    text = text.replaceAll("ı", "i");
+                    text = text.replaceAll("ç", "c");
+                    text = text.replaceAll("ğ", "g");
+                    return text;
+                  }
                   // Şarkı adı veya seslendiren adı içinde aranan metni içeren öğeleri filtreleyin
-                  return songName.contains(searchText) || singerName.contains(searchText);
+                  return replaceTurkishCharacters(songName).contains(replaceTurkishCharacters(searchText)) ||
+                      replaceTurkishCharacters(singerName).contains(replaceTurkishCharacters(searchText));
                 }).toList();
+
+                String replaceTurkishCharacters(String text) {
+                  text = text.replaceAll("â", "a");
+                  text = text.replaceAll("ş", "s");
+                  text = text.replaceAll("ö", "o");
+                  text = text.replaceAll("ü", "u");
+                  text = text.replaceAll("ı", "i");
+                  text = text.replaceAll("ç", "c");
+                  text = text.replaceAll("ğ", "g");
+                  return text;
+                }
 
                 // Filtrelenmiş liste ile UI'yi güncelleyin
                 setState(() {

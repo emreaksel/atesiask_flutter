@@ -19,7 +19,7 @@ class Degiskenler {
   List<dynamic> listSozler=[];
   List<dynamic> listDinle=[];
 
-  final Map<String, List<VoidCallback>> _variableListeners = {};
+  /*final Map<String, List<VoidCallback>> _variableListeners = {};
   void addListenerForVariable(String variable, VoidCallback listener) {
     if (!_variableListeners.containsKey(variable)) {
       _variableListeners[variable] = [];
@@ -31,7 +31,7 @@ class Degiskenler {
   }
   void notifyListenersForVariable(String variable) {
     _variableListeners[variable]?.forEach((listener) => listener());
-  }
+  }*/
 
   factory Degiskenler() {
     return _instance;
