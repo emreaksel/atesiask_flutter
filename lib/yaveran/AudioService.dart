@@ -27,6 +27,7 @@ class AudioService {
   static final isLastSongNotifier = ValueNotifier<bool>(true);
   static final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
   static bool _initialized = false;
+  static int ilkkez=-1;
 
 /*
   AudioService() {
@@ -219,12 +220,13 @@ class AudioService {
     }
   }
   setCurrentTrack(index){
-    if (index != null) {
+    if (index != null && ilkkez!=-1) {
       parca_adi = degiskenler.listDinle[index]["parca_adi"];
       seslendiren = degiskenler.listDinle[index]["seslendiren"];
       currentSongTitleNotifier.value = parca_adi;
       currentSongSubTitleNotifier.value = seslendiren;
     }
+    ilkkez=index; //ilk parça listenin hep ilk parçası oluyordu bunu engelledik ayrıca playlist yüklenince direkt next yapıyor
     /*if (index >= 0 && index < parca_listesi.length) {
       // İstenilen index numarası geçerli bir aralıkta mı kontrol ediyoruz
       var desiredAudio = parca_listesi[index];
