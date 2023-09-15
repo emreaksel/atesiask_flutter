@@ -226,7 +226,7 @@ class AudioService {
       currentSongTitleNotifier.value = parca_adi;
       currentSongSubTitleNotifier.value = seslendiren;
     }
-    ilkkez=index; //ilk parça listenin hep ilk parçası oluyordu bunu engelledik ayrıca playlist yüklenince direkt next yapıyor
+    if (index != null) ilkkez=index; //ilk parça listenin hep ilk parçası oluyordu bunu engelledik ayrıca playlist yüklenince direkt next yapıyor
     /*if (index >= 0 && index < parca_listesi.length) {
       // İstenilen index numarası geçerli bir aralıkta mı kontrol ediyoruz
       var desiredAudio = parca_listesi[index];
