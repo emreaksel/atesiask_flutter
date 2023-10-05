@@ -12,13 +12,15 @@ class Degiskenler {
   String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
 
   static var currentEpigramNotifier = ValueNotifier<String>('...');
+  static var currentImageNotifier = ValueNotifier<String>('bahar.jpg');
+
   static var songListNotifier = ValueNotifier<List<dynamic>>([]);
 
-
+  var oncekiFotografYolu="";
   List<dynamic> dinlemeListeleri=[];
   List<dynamic> listSozler=[];
   List<dynamic> listDinle=[];
-
+  List<dynamic> listFotograflar=[];
   /*final Map<String, List<VoidCallback>> _variableListeners = {};
   void addListenerForVariable(String variable, VoidCallback listener) {
     if (!_variableListeners.containsKey(variable)) {

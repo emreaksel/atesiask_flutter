@@ -3,33 +3,35 @@ import 'dart:math';
 import 'package:bizidealcennetine/yaveran/widgets_audio.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:bizidealcennetine/yaveran/Notifier.dart';
+import 'package:confetti/confetti.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
 import 'package:provider/provider.dart';
 import 'package:text_scroll/text_scroll.dart';
-
 import 'yaveran/HttpService.dart';
 import 'yaveran/JsonHelper.dart';
 import 'yaveran/AudioService.dart';
 
 final Degiskenler degiskenler = Degiskenler();
-final AudioService _audioService = AudioService(); // AudioService nesnesini oluşturun
-AkanYazi _akanYazi = AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
+final AudioService _audioService =
+    AudioService(); // AudioService nesnesini oluşturun
+AkanYazi _akanYazi =
+    AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
 
 void main() {
   runApp(MyApp());
   arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
 }
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MainScreen(),//SplashScreen(),
+      home: MainScreen(), //SplashScreen(),
       /*Scaffold(
         body: SafeArea(
           child: MyCustomLayout(),
@@ -38,13 +40,13 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => EkranBoyutNotifier()),
-
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -56,12 +58,15 @@ class MainScreen extends StatelessWidget {
     );
   }
 }
+
 class MyCustomLayout extends StatefulWidget {
   @override
   _MyCustomLayoutState createState() => _MyCustomLayoutState();
 }
+
 class _MyCustomLayoutState extends State<MyCustomLayout> {
-  final StreamController<bool> _showDialogStreamController =  StreamController<bool>();
+  final StreamController<bool> _showDialogStreamController =
+      StreamController<bool>();
 
   @override
   void dispose() {
@@ -117,6 +122,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
                 child: IndexedStack(
                   index: ekranBoyutNotifier.ustEkranAktifIndex,
                   children: [
+                    //ConfettiWidgetExample(),
                     KenBurnsViewWidget(),
                     ListeWidget(),
                     // Diğer widget'ları buraya ekleyebilirsiniz
@@ -148,6 +154,161 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
   }
 }
 
+enum ConfettiShape { circle, heart, diamond, star }
+class ConfettiWidgetExample extends StatefulWidget {
+  @override
+  _ConfettiWidgetExampleState createState() => _ConfettiWidgetExampleState();
+}
+class _ConfettiWidgetExampleState extends State<ConfettiWidgetExample> {
+  late ConfettiController _controllerCenter;
+  late ConfettiShape _selectedShape;
+
+  final _shapes = [
+    ConfettiShape.circle,
+    ConfettiShape.heart,
+    ConfettiShape.diamond,
+    ConfettiShape.star,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controllerCenter = ConfettiController(
+      duration: const Duration(seconds: 5),
+    );
+    _selectedShape = _shapes[0];
+  }
+
+  @override
+  void dispose() {
+    _controllerCenter.dispose();
+    super.dispose();
+  }
+
+  void _startConfetti(ConfettiShape shape, ConfettiController controller) {
+    controller.play();
+    setState(() {
+      _selectedShape = shape;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ConfettiWidget(
+            confettiController: _controllerCenter,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: true,
+            gravity: 0.001,
+            colors: [Color(0xFFFF0000)],
+            // Sadece kırmızı renk kullanacak
+            numberOfParticles: 10,
+            // Konfeti parçacık sayısı
+            createParticlePath: _drawShape, // Seçilen şekli kullan
+          ),
+          SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => _startConfetti(_shapes[1], _controllerCenter),
+                child: Text('Kalp'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Path _drawShape(Size size) {
+    switch (_selectedShape) {
+      case ConfettiShape.circle:
+        return _drawCircle(size);
+      case ConfettiShape.heart:
+        return _drawHeart(size);
+      case ConfettiShape.diamond:
+        return _drawDiamond(size);
+      case ConfettiShape.star:
+        return _drawStar(size);
+      default:
+        return _drawCircle(size);
+    }
+  }
+
+  Path _drawCircle(Size size) {
+    final path = Path();
+    path.addOval(Rect.fromCenter(
+        center: size.center(Offset.zero), width: 20, height: 20));
+    return path;
+  }
+
+  Path _drawHeart(Size size) {
+    final path = Path();
+    final x = size.width / 2;
+    final y = size.height / 2;
+    final step = size.width / 40;
+    path.moveTo(x, y);
+    // Sol yarı kalp
+    for (double angle = 0; angle < pi; angle += 0.01) {
+      final dx = 16 * pow(sin(angle), 3);
+      final dy = -(13 * cos(angle) -
+          5 * cos(2 * angle) -
+          2 * cos(3 * angle) -
+          cos(4 * angle));
+      path.lineTo(x - dx * step, y - dy * step);
+    }
+    // Sağ yarı kalp
+    for (double angle = 0; angle < pi; angle += 0.01) {
+      final dx = 16 * pow(sin(angle), 3);
+      final dy = -(13 * cos(angle) -
+          5 * cos(2 * angle) -
+          2 * cos(3 * angle) -
+          cos(4 * angle));
+      path.lineTo(x + dx * step, y - dy * step);
+    }
+    return path;
+  }
+
+  Path _drawDiamond(Size size) {
+    final path = Path();
+    final halfWidth = size.width / 2;
+    final halfHeight = size.height / 2;
+
+    path.moveTo(halfWidth, 0);
+    path.lineTo(size.width, halfHeight);
+    path.lineTo(halfWidth, size.height);
+    path.lineTo(0, halfHeight);
+    path.close();
+
+    return path;
+  }
+
+  Path _drawStar(Size size) {
+    final path = Path();
+    final halfWidth = size.width / 2;
+    final halfHeight = size.height / 2;
+
+    path.moveTo(halfWidth, 0);
+    path.lineTo(halfWidth + size.width * 0.05, halfHeight - size.height * 0.2);
+    path.lineTo(size.width, halfHeight - size.height * 0.3);
+    path.lineTo(halfWidth + size.width * 0.3, halfHeight + size.height * 0.1);
+    path.lineTo(halfWidth + size.width * 0.5, size.height);
+    path.lineTo(halfWidth, halfHeight + size.height * 0.4);
+    path.lineTo(halfWidth - size.width * 0.5, size.height);
+    path.lineTo(halfWidth - size.width * 0.3, halfHeight + size.height * 0.1);
+    path.lineTo(0, halfHeight - size.height * 0.3);
+    path.lineTo(halfWidth - size.width * 0.05, halfHeight - size.height * 0.2);
+    path.close();
+
+    return path;
+  }
+}
+
+/*
 class KenBurnsViewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -158,9 +319,46 @@ class KenBurnsViewWidget extends StatelessWidget {
             minAnimationDuration: Duration(milliseconds: 10000),
             maxAnimationDuration: Duration(milliseconds: 13000),
             maxScale: 1.3,
-            child: Image.network(
-              "${degiskenler.kaynakYolu}/atesiask/bahar11.jpg",
-              fit: BoxFit.cover,
+            child: IndexedStack(
+              index: fotosira,
+              children:
+              [
+                CachedNetworkImage(
+                  imageUrl:
+                      "https://kardelendergisi.com/atesiask/atesiask/bahar.jpg",
+                  placeholder: (context, url) => CircularProgressIndicator(
+                    backgroundColor: Colors.black,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                  ),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  imageBuilder: (context, imageProvider) => Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                CachedNetworkImage(
+                  imageUrl:
+                      "https://kardelendergisi.com/atesiask/atesiask/bahar.jpg",
+                  placeholder: (context, url) => CircularProgressIndicator(
+                    backgroundColor: Colors.black,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                  ),
+                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  imageBuilder: (context, imageProvider) => Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                // Diğer widget'ları buraya ekleyebilirsiniz
+              ],
             ),
           ),
           Positioned(
@@ -174,6 +372,37 @@ class KenBurnsViewWidget extends StatelessWidget {
     );
   }
 }
+*/
+class KenBurnsViewWidget extends StatefulWidget {
+  @override
+  _KenBurnsViewWidgetState createState() => _KenBurnsViewWidgetState();
+}
+
+class _KenBurnsViewWidgetState extends State<KenBurnsViewWidget> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Stack(
+        children: [
+          KenBurns(
+            minAnimationDuration: Duration(milliseconds: 10000),
+            maxAnimationDuration: Duration(milliseconds: 13000),
+            maxScale: 1.3,
+            child: Base64ImageWidget()
+          ),
+          Positioned(
+            bottom: 0, // Alt boşluk
+            left: 0, // Sol boşluk
+            right: 0, // Sağ boşluk
+            child: _akanYazi,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AkanYazi extends StatelessWidget {
   final String text;
 
@@ -183,7 +412,8 @@ class AkanYazi extends StatelessWidget {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    double yaziBoyutu = screenHeight * 0.019; // Yüksekliğin %5'i kadar bir yazı boyutu
+    double yaziBoyutu =
+        screenHeight * 0.019; // Yüksekliğin %5'i kadar bir yazı boyutu
 
     String setEpigram(String text) {
       final painter = TextPainter(
@@ -192,7 +422,8 @@ class AkanYazi extends StatelessWidget {
       )..layout();
 
       double textWidth = painter.width;
-      int targetLength = (textWidth / 3.34).toInt(); // Yazının genişlik oranına göre hedef uzunluk hesaplayın
+      int targetLength = (textWidth / 3.34)
+          .toInt(); // Yazının genişlik oranına göre hedef uzunluk hesaplayın
       String finalText;
       if (screenWidth > textWidth) {
         finalText = text + ' ' * (screenWidth / 3.9).toInt();
@@ -210,7 +441,8 @@ class AkanYazi extends StatelessWidget {
         valueListenable: Degiskenler.currentEpigramNotifier,
         builder: (_, title, __) {
           return TextScroll(
-            setEpigram(title), // title değişkenini kullanmak istediğinizi varsayıyorum
+            setEpigram(title),
+            // title değişkenini kullanmak istediğinizi varsayıyorum
             mode: TextScrollMode.endless,
             velocity: Velocity(pixelsPerSecond: Offset(50, 0)),
             delayBefore: Duration(milliseconds: 500),
@@ -223,10 +455,8 @@ class AkanYazi extends StatelessWidget {
         },
       ),
     );
-
   }
 }
-
 /*class ListeWidget extends StatefulWidget {
   @override
   _ListeWidgetState createState() => _ListeWidgetState();
@@ -259,9 +489,11 @@ class ListeWidget extends StatefulWidget {
   _ListeWidgetState createState() => _ListeWidgetState();
 }
 class _ListeWidgetState extends State<ListeWidget> {
-  TextEditingController _searchController = TextEditingController(); // Arama çubuğu kontrolcüsü
+  TextEditingController _searchController =
+      TextEditingController(); // Arama çubuğu kontrolcüsü
   List<dynamic> filteredSongList = []; // Filtrelenmiş şarkı listesi
-  String searchText="";
+  String searchText = "";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -285,12 +517,16 @@ class _ListeWidgetState extends State<ListeWidget> {
               controller: _searchController, // Arama çubuğu kontrolcüsü
               onChanged: (value) {
                 // Arama çubuğundaki değeri alın
-                searchText = value.toLowerCase(); // Aramayı küçük harfe çevirin (büyük/küçük harf duyarlılığı olmadan arama yapmak için)
+                searchText = value
+                    .toLowerCase(); // Aramayı küçük harfe çevirin (büyük/küçük harf duyarlılığı olmadan arama yapmak için)
 
                 // Filtreleme işlemini gerçekleştirin ve sonucu yeni bir liste olarak saklayın
-                List<dynamic> filteredList = Degiskenler.songListNotifier.value.where((song) {
-                  String songName = song['parca_adi'].toLowerCase(); // Şarkı adını küçük harfe çevirin
-                  String singerName = song['seslendiren'].toLowerCase(); // Seslendiren adını küçük harfe çevirin
+                List<dynamic> filteredList =
+                    Degiskenler.songListNotifier.value.where((song) {
+                  String songName = song['parca_adi']
+                      .toLowerCase(); // Şarkı adını küçük harfe çevirin
+                  String singerName = song['seslendiren']
+                      .toLowerCase(); // Seslendiren adını küçük harfe çevirin
                   String replaceTurkishCharacters(String text) {
                     text = text.replaceAll("â", "a");
                     text = text.replaceAll("ş", "s");
@@ -301,9 +537,12 @@ class _ListeWidgetState extends State<ListeWidget> {
                     text = text.replaceAll("ğ", "g");
                     return text;
                   }
+
                   // Şarkı adı veya seslendiren adı içinde aranan metni içeren öğeleri filtreleyin
-                  return replaceTurkishCharacters(songName).contains(replaceTurkishCharacters(searchText)) ||
-                      replaceTurkishCharacters(singerName).contains(replaceTurkishCharacters(searchText));
+                  return replaceTurkishCharacters(songName)
+                          .contains(replaceTurkishCharacters(searchText)) ||
+                      replaceTurkishCharacters(singerName)
+                          .contains(replaceTurkishCharacters(searchText));
                 }).toList();
 
                 String replaceTurkishCharacters(String text) {
@@ -334,7 +573,8 @@ class _ListeWidgetState extends State<ListeWidget> {
         valueListenable: Degiskenler.songListNotifier,
         builder: (context, songList, child) {
           // Filtrelenmiş liste veya orijinal liste üzerinden dönün
-          List<dynamic> displayList = filteredSongList.isNotEmpty ? filteredSongList : songList;
+          List<dynamic> displayList =
+              filteredSongList.isNotEmpty ? filteredSongList : songList;
 
           if (filteredSongList.isEmpty && searchText.isNotEmpty) {
             // Arama sonucunda eşleşen öğe yoksa hiçbir şey göstermeyin
@@ -348,7 +588,10 @@ class _ListeWidgetState extends State<ListeWidget> {
               itemCount: displayList.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(displayList[index]['parca_adi'] + " [" + displayList[index]['seslendiren'] + "]"),
+                  title: Text(displayList[index]['parca_adi'] +
+                      " [" +
+                      displayList[index]['seslendiren'] +
+                      "]"),
                   //leading: Image.asset('images/atesiask.png'), // Fotoğrafı ekleyin
                   onTap: () {
                     // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
@@ -364,9 +607,6 @@ class _ListeWidgetState extends State<ListeWidget> {
     );
   }
 }
-
-
-
 Future<Map<String, dynamic>> getirJsonData(String yol) async {
   final HttpService _httpService = HttpService();
 
@@ -380,7 +620,6 @@ Future<Map<String, dynamic>> getirJsonData(String yol) async {
     throw Exception('Veri çekilirken bir hata oluştu: $error');
   }
 }
-
 class CustomDialog extends StatelessWidget {
   final VoidCallback onClose;
 
@@ -448,12 +687,11 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }*/
-
 void setPlaylist(data) {
   print("LAVANTA ${data[0]}");
 
-  degiskenler.listDinle=data;
-  Degiskenler.songListNotifier.value=data;
+  degiskenler.listDinle = data;
+  Degiskenler.songListNotifier.value = data;
 
   List<AudioSource> playlist = [];
   for (var item in data) {
@@ -477,27 +715,45 @@ void setPlaylist(data) {
 
   _audioService.setPlaylist(playlist);
 }
-
 /*
 Future<void> initializeAudioService() async {
   await _audioService.init();
   print("initializeAudioServiceinitializeAudioServiceinitializeAudioServiceinitializeAudioService");
 }
 */
-
 void arkaplanIslemleri() async {
-
   _audioService.init();
 
-  final Future<Map<String, dynamic>> jsonMenba = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
-  final Future<Map<String, dynamic>> jsonSozler = compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
+  final Future<Map<String, dynamic>> jsonMenba =
+      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
+  final Future<Map<String, dynamic>> jsonSozler =
+      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
+  final Future<Map<String, dynamic>> jsonFotograflar = compute(
+      getirJsonData, "${degiskenler.kaynakYolu}/kaynak/fotograflar.json");
 
   //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
   // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
   /*Timer(Duration(seconds: 5), () {
         _showDialogStreamController.add(false);
       });*/
-
+  jsonFotograflar.then((jsonDataMap) {
+    if (jsonDataMap.containsKey("fotograflar")) {
+      final List<dynamic> fotograflarListesi = jsonDataMap["fotograflar"];
+      if (fotograflarListesi.isNotEmpty) {
+        final Random random = Random();
+        final int randomIndex = random.nextInt(fotograflarListesi.length);
+        final String secilen = fotograflarListesi[randomIndex]['path'];
+        Degiskenler.currentImageNotifier.value = secilen;
+        degiskenler.oncekiFotografYolu = secilen;
+        print("Rastgele Seçilen fotograf: $secilen");
+        degiskenler.listFotograflar = fotograflarListesi;
+      } else {
+        print("fotograf listesi boş.");
+      }
+    } else {
+      print("Verilerde 'fotograf' anahtarı bulunamadı.");
+    }
+  });
   jsonSozler.then((jsonDataMap) {
     if (jsonDataMap.containsKey("sozler")) {
       final List<dynamic> sozlerListesi = jsonDataMap["sozler"];
@@ -505,14 +761,13 @@ void arkaplanIslemleri() async {
         final Random random = Random();
         final int randomIndex = random.nextInt(sozlerListesi.length);
         final String secilenSoz = sozlerListesi[randomIndex];
-        Degiskenler.currentEpigramNotifier.value=secilenSoz;
-        //_akanYazi = AkanYazi(secilenSoz);
+        Degiskenler.currentEpigramNotifier.value = secilenSoz;
         print("Rastgele Seçilen Söz: $secilenSoz");
+        degiskenler.listSozler = sozlerListesi;
       } else {
         print("Söz listesi boş.");
       }
-    }
-    else {
+    } else {
       print("Verilerde 'sozler' anahtarı bulunamadı.");
     }
   });
@@ -532,7 +787,7 @@ void arkaplanIslemleri() async {
       if (id == dinlemeListesiID) {
         compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json")
             .then((data) {
-          List<dynamic> listDinle=data["sesler"];
+          List<dynamic> listDinle = data["sesler"];
           setPlaylist(listDinle);
           //print(degiskenler.listDinle);
         });
@@ -549,88 +804,60 @@ void arkaplanIslemleri() async {
   //print(result); // İşlem sonucunu burada kullanabilirsiniz
 }
 
-/*
-class AudioInfoNotifier with ChangeNotifier {
-
-  static AudioInfoNotifier _instance = AudioInfoNotifier._();
-  AudioInfoNotifier._(); // Private constructor
-  static AudioInfoNotifier getInstance() => _instance;
-
-  String _trackName = '...';
-  String _artistName = '.';
-  bool _isPlaying= false;
-
-  String get trackName => _trackName;
-  String get artistName => _artistName;
-  bool get isPlaying => _isPlaying;
-
-  set TrackName(String trackName) {
-    _trackName = trackName;
-    notifyListeners();
-  }
-  set ArtistName(String artistName) {
-    _artistName = artistName;
-    notifyListeners();
-  }
-  set IsPlaying(bool isPlaying) {
-    _isPlaying = isPlaying;
-    notifyListeners();
-  }
-
-  void setTrackInfo(bool isPlaying,String trackName, String artistName) {
-    _trackName = trackName;
-    _artistName = artistName;
-    _isPlaying=isPlaying;
-    notifyListeners();
-  }
-}
-*/
-/*
-class PlaybackControlsWidget extends StatefulWidget {
+class Base64ImageWidget extends StatefulWidget {
   @override
-  _PlaybackControlsWidgetState createState() => _PlaybackControlsWidgetState();
+  _Base64ImageWidgetState createState() => _Base64ImageWidgetState();
 }
-class _PlaybackControlsWidgetState extends State<PlaybackControlsWidget> {
-  late EkranBoyutNotifier ekranBoyutNotifier;
-  late AudioInfoNotifier _audioInfoNotifier;
+class _Base64ImageWidgetState extends State<Base64ImageWidget> {
+  Uint8List? _imageBytes;
+  String? _currentImageUrl; // Bu, mevcut imageUrl'i saklamak için kullanılır.
 
   @override
   void initState() {
     super.initState();
+    print("İLKKKKKKKKKKKKKKKKK");
+  }
+
+  Future<void> _downloadImage(imageUrl) async {
+    final HttpService _httpService = HttpService();
+    try {
+      final responseBytes = await _httpService.fetchBytes("https://kardelendergisi.com/atesiask/atesiask/$imageUrl");
+      setState(() {
+        _imageBytes = responseBytes;
+        _currentImageUrl = imageUrl; // imageUrl'i güncelle
+      });
+    } catch (e) {
+      print('Resim indirme hatası: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
-    _audioInfoNotifier = Provider.of<AudioInfoNotifier>(context, listen: true);
+    return ValueListenableBuilder<String>(
+      valueListenable: Degiskenler.currentImageNotifier,
+      builder: (context, imageUrl, child) {
+        print("yeni resim yolu $imageUrl");
 
-    bool showTrackNames = ekranBoyutNotifier.altEkranBoyut >= 2;
-    IconData playPauseIcon=_audioInfoNotifier.isPlaying
-        ? FontAwesomeIcons.pause
-        : FontAwesomeIcons.play;
-
-    return Container(
-      *//*padding: EdgeInsets.all(16.0),*//*
-      decoration: showTrackNames
-          ? const BoxDecoration(
-              color: Colors.black,
-            )
-          : const BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(27.0),
-                topRight: Radius.circular(27.0),
-              ),
-            ),
-      child: Column(
-        children: [
-        AudioControlButtons(),
-        ],
-      ),
+        // Eğer imageUrl önceki ile aynı ise ve _imageBytes doluysa, mevcut resmi göster
+        if (_currentImageUrl == imageUrl && _imageBytes != null) {
+          return Image.memory(
+            _imageBytes!,
+            fit: BoxFit.cover,
+          );
+        } else {
+          // Değişiklik varsa veya _imageBytes null ise resmi indir
+          _downloadImage(imageUrl);
+          return _imageBytes != null
+              ? Image.memory(
+            _imageBytes!,
+            fit: BoxFit.cover,
+          )
+              : CircularProgressIndicator();
+        }
+      },
     );
   }
-}*/
-
+}
 
 
 

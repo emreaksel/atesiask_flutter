@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:audio_session/audio_session.dart';
 import 'package:bizidealcennetine/main.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
@@ -258,6 +260,8 @@ class AudioService {
     else await play();
   }
   Future<void> next() async {
+    UI_support().changeImage();
+    UI_support().changeEpigram();
     await player.seekToNext();
   }
   Future<void> previous() async {
@@ -340,3 +344,20 @@ class AudioService {
   }
 }
 
+class UI_support {
+  Future<void> changeImage() async {
+    final Random random = Random();
+    final int randomIndex = random.nextInt(degiskenler.listFotograflar.length);
+    final String secilen = degiskenler.listFotograflar[randomIndex]['path'];
+    Degiskenler.currentImageNotifier.value=secilen;
+    degiskenler.oncekiFotografYolu=secilen;
+    print("Rastgele Seçilen fotograf: $secilen");
+  }
+  Future<void> changeEpigram() async {
+    final Random random = Random();
+    final int randomIndex = random.nextInt(degiskenler.listSozler.length);
+    final String secilen = degiskenler.listSozler[randomIndex];
+    Degiskenler.currentEpigramNotifier.value=secilen;
+    print("Rastgele Seçilen söz: $secilen");
+  }
+}
