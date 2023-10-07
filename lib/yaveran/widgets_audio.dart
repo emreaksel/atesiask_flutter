@@ -35,7 +35,7 @@ class PlayButton extends StatelessWidget {
         switch (value) {
           case ButtonState.paused:
             return IconButton(
-              icon: const Icon(FontAwesomeIcons.play, color: Colors.pinkAccent),
+              icon: const Icon(FontAwesomeIcons.play, color: Colors.white),
               iconSize: calculateIconSize(context, ekranBoyutNotifier),
               // Dinamik ikon boyutu kullanılıyor
               onPressed: () {
@@ -45,7 +45,7 @@ class PlayButton extends StatelessWidget {
           case ButtonState.playing || ButtonState.loading:
             return IconButton(
               icon: const Icon(FontAwesomeIcons.pause,
-                  color: Colors.deepOrangeAccent),
+                  color: Colors.white),
               iconSize: calculateIconSize(context, ekranBoyutNotifier),
               // Dinamik ikon boyutu kullanılıyor
               onPressed: () {
@@ -74,7 +74,7 @@ class CurrentSongTitle extends StatelessWidget {
             style: TextStyle(
               fontSize: calculateFontSize(context, ekranBoyutNotifier),
               // Dinamik font boyutu kullanılıyor
-              color: Colors.pinkAccent,
+              color: Colors.white,
             ),
           ),
         );
@@ -99,7 +99,7 @@ class CurrentSongSubTitle extends StatelessWidget {
             style: TextStyle(
               fontSize: calculateFontSize(context, ekranBoyutNotifier),
               // Dinamik font boyutu kullanılıyor
-              color: Colors.pinkAccent,
+              color: Colors.white,
             ),
           ),
         );
@@ -130,7 +130,7 @@ class SeekBar extends StatelessWidget {
             bufferedBarColor: Colors.black,
             thumbColor: Color(0xFFFF0000),
             barCapShape: BarCapShape.round,
-            timeLabelTextStyle: TextStyle(color: Colors.pinkAccent),
+            timeLabelTextStyle: TextStyle(color: Colors.white),
             timeLabelLocation: TimeLabelLocation.sides,
             barHeight: 5.0,
             thumbRadius: 10.0,
@@ -157,7 +157,7 @@ class RepeatButton extends StatelessWidget {
             return IconButton(
                 icon: const Icon(
                   FontAwesomeIcons.shuffle,
-                  color: Colors.pinkAccent,
+                  color: Colors.white,
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -167,7 +167,7 @@ class RepeatButton extends StatelessWidget {
             return IconButton(
                 icon: const Icon(
                   FontAwesomeIcons.repeat,
-                  color: Colors.pinkAccent,
+                  color: Colors.white,
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -194,13 +194,13 @@ class PreviousSongButton extends StatelessWidget {
               margin: const EdgeInsets.all(8.0),
               width: 32.0,
               height: 32.0,
-              child: const CircularProgressIndicator(),
+              /*child: const CircularProgressIndicator(),*/
             );
           case ButtonState.paused || ButtonState.playing:
             return IconButton(
                 icon: const Icon(
                   FontAwesomeIcons.backwardStep,
-                  color: Colors.pinkAccent,
+                  color: Colors.white,
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -227,13 +227,13 @@ class NextSongButton extends StatelessWidget {
               margin: const EdgeInsets.all(8.0),
               width: 32.0,
               height: 32.0,
-              child: const CircularProgressIndicator(),
+              /*child: const CircularProgressIndicator(),*/
             );
           case ButtonState.paused || ButtonState.playing:
             return IconButton(
                 icon: const Icon(
                   FontAwesomeIcons.forwardStep,
-                  color: Colors.pinkAccent,
+                  color: Colors.white,
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -255,7 +255,7 @@ class ListButton extends StatelessWidget {
     return IconButton(
         icon: const Icon(
           FontAwesomeIcons.listCheck,
-          color: Colors.pinkAccent,
+          color: Colors.white,
         ),
         iconSize: calculateIconSize(context, ekranBoyutNotifier),
         onPressed: () {
@@ -275,7 +275,7 @@ class BackButton extends StatelessWidget {
     return IconButton(
         icon: const Icon(
           FontAwesomeIcons.arrowLeft,
-          color: Colors.pinkAccent,
+          color: Colors.white,
         ),
         iconSize: calculateIconSize(context, ekranBoyutNotifier),
         onPressed: () {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:audio_session/audio_session.dart';
@@ -8,6 +9,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'Log.dart';
 import 'Notifier.dart';
 
 class AudioService {
@@ -30,6 +32,7 @@ class AudioService {
   static final isShuffleModeEnabledNotifier = ValueNotifier<bool>(false);
   static bool _initialized = false;
   static int ilkkez=-1;
+  UI_support uiSupport = UI_support();
 
 /*
   AudioService() {
@@ -149,7 +152,8 @@ class AudioService {
       });
 
       player.currentIndexStream.listen((index) {
-        //print("currentIndexStream $index");
+        uiSupport.changeImage();
+        uiSupport.changeEpigram();
         setCurrentTrack(index);
 
       });
@@ -158,16 +162,17 @@ class AudioService {
         final isPlaying = playerState.playing;
         final processingState = playerState.processingState;
 
-
-
         if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
           playButtonNotifier.value = ButtonState.loading;
-        } else if (!isPlaying) {
+        }
+        else if (!isPlaying) {
           playButtonNotifier.value = ButtonState.paused;
-        } else if (processingState != ProcessingState.completed) {
+        }
+        else if (processingState != ProcessingState.completed) {
           playButtonNotifier.value = ButtonState.playing;
-        } else {
+        }
+        else {
           player.seek(Duration.zero);
           player.pause();
         }
@@ -260,8 +265,6 @@ class AudioService {
     else await play();
   }
   Future<void> next() async {
-    UI_support().changeImage();
-    UI_support().changeEpigram();
     await player.seekToNext();
   }
   Future<void> previous() async {
@@ -345,19 +348,47 @@ class AudioService {
 }
 
 class UI_support {
-  Future<void> changeImage() async {
-    final Random random = Random();
-    final int randomIndex = random.nextInt(degiskenler.listFotograflar.length);
-    final String secilen = degiskenler.listFotograflar[randomIndex]['path'];
-    Degiskenler.currentImageNotifier.value=secilen;
-    degiskenler.oncekiFotografYolu=secilen;
-    print("Rastgele Seçilen fotograf: $secilen");
+  final Duration _debounceDuration = Duration(seconds: 29);
+  static Timer? _debouncer;
+  static Timer? _debouncer2;
+
+  void changeImage() {
+    if (_debouncer == null) {
+      _debouncer = Timer(Duration(seconds: 1), () {});
+      final Random random = Random();
+      final int randomIndex = random.nextInt(degiskenler.listFotograflar.length);
+      final String secilen = degiskenler.listFotograflar[randomIndex]['path'];
+      Degiskenler.currentImageNotifier.value = secilen;
+      LOG("Rastgele Seçilen fotograf: $secilen");
+    } else if (!_debouncer!.isActive) {
+      _debouncer = Timer(_debounceDuration, () {
+        final Random random = Random();
+        final int randomIndex = random.nextInt(degiskenler.listFotograflar.length);
+        final String secilen = degiskenler.listFotograflar[randomIndex]['path'];
+        Degiskenler.currentImageNotifier.value = secilen;
+        LOG("Rastgele Seçilen fotograf: $secilen");
+      });
+    }
   }
-  Future<void> changeEpigram() async {
-    final Random random = Random();
-    final int randomIndex = random.nextInt(degiskenler.listSozler.length);
-    final String secilen = degiskenler.listSozler[randomIndex];
-    Degiskenler.currentEpigramNotifier.value=secilen;
-    print("Rastgele Seçilen söz: $secilen");
+
+  void changeEpigram() {
+    if (_debouncer2 == null) {
+      _debouncer2 = Timer(Duration(seconds: 1), () {});
+      final Random random = Random();
+      final int randomIndex = random.nextInt(degiskenler.listSozler.length);
+      final String secilen = degiskenler.listSozler[randomIndex];
+      Degiskenler.currentEpigramNotifier.value = secilen;
+      LOG("Rastgele Seçilen söz: $secilen");
+    } else if (!_debouncer2!.isActive) {
+      _debouncer2 = Timer(_debounceDuration, () {
+        final Random random = Random();
+        final int randomIndex = random.nextInt(degiskenler.listSozler.length);
+        final String secilen = degiskenler.listSozler[randomIndex];
+        Degiskenler.currentEpigramNotifier.value = secilen;
+        LOG("Rastgele Seçilen söz: $secilen");
+      });
+    }
   }
 }
+
+

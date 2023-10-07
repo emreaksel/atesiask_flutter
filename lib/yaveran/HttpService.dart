@@ -3,11 +3,13 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import 'Log.dart';
+
 class HttpService {
   HttpService();
 
   Future<String> fetchData(String path, {String encoding = 'utf8'}) async {
-    print("HttpService-fetchData yolu: " + path);
+    LOG("HttpService-fetchData yolu: " + path);
     final response = await http.get(Uri.parse(path));
 
     if (response.statusCode == 200) {
@@ -19,7 +21,7 @@ class HttpService {
     }
   }
   Future<Uint8List> fetchBytes(String path) async {
-    print("HttpService-fetchBytes yolu: " + path);
+    LOG("HttpService-fetchBytes yolu: " + path);
     final response = await http.get(Uri.parse(path));
 
     if (response.statusCode == 200) {

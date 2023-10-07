@@ -7,16 +7,15 @@ class Degiskenler {
   static final Degiskenler _instance = Degiskenler._internal();
   int versionMenba = 0;
 
+  static var hazirlaniyor=false;
   //String kaynakYolu=".";
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
   String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
 
   static var currentEpigramNotifier = ValueNotifier<String>('...');
-  static var currentImageNotifier = ValueNotifier<String>('bahar.jpg');
-
+  static var currentImageNotifier = ValueNotifier<String>('');
   static var songListNotifier = ValueNotifier<List<dynamic>>([]);
 
-  var oncekiFotografYolu="";
   List<dynamic> dinlemeListeleri=[];
   List<dynamic> listSozler=[];
   List<dynamic> listDinle=[];
