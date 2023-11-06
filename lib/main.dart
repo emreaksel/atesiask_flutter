@@ -12,6 +12,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:text_scroll/text_scroll.dart';
 import 'yaveran/HttpService.dart';
 import 'yaveran/JsonHelper.dart';
@@ -32,12 +33,36 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MainScreen(), //SplashScreen(),
-      /*Scaffold(
-        body: SafeArea(
-          child: MyCustomLayout(),
-        ),
-      ),*/
+      home: WillPopScope( //geri tuşunu dinlemek için
+        onWillPop: () async {
+          /*bool shouldExit = await showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text('Çıkmak istediğinize emin misiniz?'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                    child: Text('Hayır'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    child: Text('Evet'),
+                  ),
+                ],
+              );
+            },
+          );*/
+          FocusScope.of(context).unfocus(); // Klavyeyi gizler
+          return true; // Geri tuşuna izin verir
+        },
+
+        child: MainScreen(),
+      ),
     );
   }
 }
@@ -63,23 +88,18 @@ class MyCustomLayout extends StatefulWidget {
   _MyCustomLayoutState createState() => _MyCustomLayoutState();
 }
 class _MyCustomLayoutState extends State<MyCustomLayout> {
-  final StreamController<bool> _showDialogStreamController =
-      StreamController<bool>();
+
   @override
   void dispose() {
-    _showDialogStreamController.close();
     super.dispose();
   }
   @override
   void initState() {
     super.initState();
-    _showDialogStreamController.add(true);
-
   }
   void closeDialog() {
     //Değişen değeri bildirerek listener'ları tetikleyin.
-    //degiskenler.notifyListenersForVariable("versionMenba");
-    _showDialogStreamController.add(false);
+    Degiskenler.showDialogNotifier.value=false;
   }
   @override
   Widget build(BuildContext context) {
@@ -106,33 +126,62 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
             ],
           ),
         ),
-        Positioned.fill(
-          child: ValueListenableBuilder<ButtonState>(
-            valueListenable: AudioService.playButtonNotifier,
-            builder: (context, value, child) {
-              switch (value) {
-                case ButtonState.loading:
-                return Align(
-                  alignment: Alignment.center,
-                  child: LoadingWidget(),
-                );
-                default:
-                  return Container(); // Diğer durumlarda bir şey gösterme
-              }
-            },
-          ),
+        Stack(
+          fit: StackFit.expand,
+          children: [
+            ValueListenableBuilder<ButtonState>( //mana yükleniyor
+              valueListenable: AudioService.playButtonNotifier,
+              builder: (context, value, child) {
+                switch (value) {
+                  case ButtonState.loading:
+                    return Align(
+                      alignment: Alignment.center,
+                      child: LoadingWidget(),
+                    );
+                  default:
+                    return Container(); // Diğer durumlarda bir şey gösterme
+                }
+              },
+            ),
+            Positioned.fill(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: Degiskenler.showDialogNotifier,
+                builder: (context, goster, child) {
+                  return Visibility(
+                    visible: goster,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: CustomDialog(onClose: closeDialog),
+                    ),
+                  );
+                },
+              ),
+            )
+
+          ],
         ),
+
       ],
     );
   }
 }
 
 class LoadingWidget extends StatelessWidget {
+  double calculateFontSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double fontSize =
+        screenHeight * (ekranBoyutNotifier.altEkranBoyut / 100) * 0.11;
+    return fontSize;
+  }
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
   @override
   Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
     return Center(
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.5, // Yarı genişlik
+        width: MediaQuery.of(context).size.width * 0.57, // Yarı genişlik
         height: MediaQuery.of(context).size.height * 0.23, // Yarı yükseklik
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30.0), // Border radius ekleyin
@@ -167,12 +216,12 @@ class LoadingWidget extends StatelessWidget {
                   'images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
                   height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
                 ),
-                const Text(
+                Text(
                   '       Mana Yükleniyor...', // Başlık metni
                   style: TextStyle(
-                    fontSize: 18.0,
+                    fontSize: calculateFontSize(context, ekranBoyutNotifier),
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    //fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -278,9 +327,12 @@ class _ListeWidgetState extends State<ListeWidget> {
       TextEditingController(); // Arama çubuğu kontrolcüsü
   List<dynamic> filteredSongList = []; // Filtrelenmiş şarkı listesi
   String searchText = "";
+  late EkranBoyutNotifier ekranBoyutNotifier;
 
   @override
   Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
     return Scaffold(
       appBar: AppBar(
         title: Center(child: Text('Dinle..')),
@@ -360,7 +412,7 @@ class _ListeWidgetState extends State<ListeWidget> {
           // Filtrelenmiş liste veya orijinal liste üzerinden dönün
           List<dynamic> displayList =
               filteredSongList.isNotEmpty ? filteredSongList : songList;
-
+          displayList=displayList.reversed.toList();
           if (filteredSongList.isEmpty && searchText.isNotEmpty) {
             // Arama sonucunda eşleşen öğe yoksa hiçbir şey göstermeyin
             return Center(
@@ -373,15 +425,30 @@ class _ListeWidgetState extends State<ListeWidget> {
               itemCount: displayList.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(displayList[index]['parca_adi'] +
-                      " [" +
-                      displayList[index]['seslendiren'] +
-                      "]"),
+                  title: Text.rich(
+                    TextSpan(
+                      text: displayList[index]['parca_adi'], // Bu kısmı bold yapmak istiyoruz
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, // Metni kalın yapar
+                      ),
+                      children: [
+                        TextSpan(
+                          text: " [" + displayList[index]['seslendiren'] + "]",
+                          style: TextStyle(
+                            fontWeight: FontWeight.normal, // Normal kalınlıkta metin
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   //leading: Image.asset('images/atesiask.png'), // Fotoğrafı ekleyin
                   onTap: () {
                     // Şarkıya tıklanıldığında yapılacak işlemleri burada gerçekleştirin
                     // Örneğin, çalma işlemi veya şarkı ayrıntıları sayfasına yönlendirme
                     _audioService.playAtId(displayList[index]['sira_no']);
+                    ekranBoyutNotifier.ustEkranAktifIndex = 0;
+                    ekranBoyutNotifier.altEkranBoyut = 20;
+                    ekranBoyutNotifier.ustEkranBoyut = 80;
                   },
                 );
               },
@@ -393,46 +460,78 @@ class _ListeWidgetState extends State<ListeWidget> {
   }
 }
 
-Future<Map<String, dynamic>> getirJsonData(String yol) async {
-  final HttpService _httpService = HttpService();
-
-  try {
-    final jsonStr = await _httpService.fetchData(yol);
-    final jsonDataList = JsonHelper.parseJson(
-        jsonStr); // Bu satırı kullanmanıza gerek yok, veri zaten bir liste
-
-    return jsonDataList; // Gelen veriyi doğrudan döndürüyoruz
-  } catch (error) {
-    throw Exception('Veri çekilirken bir hata oluştu: $error');
-  }
-}
 class CustomDialog extends StatelessWidget {
   final VoidCallback onClose;
 
-  CustomDialog({required this.onClose});
+  CustomDialog( {required this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Aşk Olsun'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Hoşgeldin Güzeller Güzelim...'),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: onClose,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightGreen, // Burada rengi ayarlıyoruz
+    return Center(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.59, // Yarı genişlik
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30.0), // Border radius ekleyin
+          color: Colors.black,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                Image.asset(
+                  'images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
+                  height: MediaQuery.of(context).size.height * 0.12, // Yarı yükseklik
+                ),
+                /*const Text(
+                  'ATEŞ-İ AŞK  ', // Başlık metni
+                  style: TextStyle(
+                    fontSize: 21.0,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),*/
+              ],
             ),
-            // onClose callback fonksiyonunu kullanarak diyaloğu kapat
-            child: Text('Teşekkürler'),
-          ),
-        ],
+            const SizedBox(height: 16.0), // Boşluk eklemek için
+            //Text('),
+            Padding(
+              padding: EdgeInsets.all(16.0), // Yastıklama (padding) ekleyin
+              child: ValueListenableBuilder<String>(
+                valueListenable: Degiskenler.currentNoticeNotifier,
+                builder: (context, notice, child) {
+                  return SelectableText(
+                    notice, // Degiskenler.currentNoticeNotifier.value
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  );
+                },
+              )
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('bildirim_goster', true);
+                onClose();
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Colors.black,
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16.0), // Padding ekleyin
+                child: Text('Teşekkürler'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
 
 /*class SplashScreen extends StatefulWidget {
   @override
@@ -473,6 +572,106 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }*/
+/*
+Future<void> initializeAudioService() async {
+  await _audioService.init();
+  print("initializeAudioServiceinitializeAudioServiceinitializeAudioServiceinitializeAudioService");
+}
+*/
+void arkaplanIslemleri() async {
+  Degiskenler.hazirlaniyor=true;
+  _audioService.init();
+
+  print("${Degiskenler.kaynakYolu}/kaynak/menba.json");
+  final Future<Map<String, dynamic>> jsonMenba =
+      compute(getirJsonData, "${Degiskenler.kaynakYolu}/kaynak/menba.json");
+  final Future<Map<String, dynamic>> jsonSozler =
+      compute(getirJsonData, "${Degiskenler.kaynakYolu}/kaynak/sozler.json");
+  final Future<Map<String, dynamic>> jsonFotograflar = compute(
+      getirJsonData, "${Degiskenler.kaynakYolu}/kaynak/fotograflar.json");
+
+  //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
+  // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
+  /*Timer(Duration(seconds: 5), () {
+        _showDialogStreamController.add(false);
+      });*/
+  jsonFotograflar.then((jsonDataMap) {
+    if (jsonDataMap.containsKey("fotograflar")) {
+      final List<dynamic> fotograflarListesi = jsonDataMap["fotograflar"];
+      if (fotograflarListesi.isNotEmpty) {
+        /*final Random random = Random();
+        final int randomIndex = random.nextInt(fotograflarListesi.length);
+        final String secilen = fotograflarListesi[randomIndex]['path'];
+        Degiskenler.currentImageNotifier.value = secilen;*/
+        //print("Rastgele Seçilen fotograf: $secilen");
+        //print('Bu bir log mesajıdır.');
+        //print(logMessage);
+        degiskenler.listFotograflar = fotograflarListesi;
+      }
+      else {
+        print("fotograf listesi boş.");
+      }
+    }
+    else {
+      print("Verilerde 'fotograf' anahtarı bulunamadı.");
+    }
+  });
+  jsonSozler.then((jsonDataMap) {
+    if (jsonDataMap.containsKey("sozler")) {
+      final List<dynamic> sozlerListesi = jsonDataMap["sozler"];
+      if (sozlerListesi.isNotEmpty) {
+        /*final Random random = Random();
+        final int randomIndex = random.nextInt(sozlerListesi.length);
+        final String secilenSoz = sozlerListesi[randomIndex];
+        Degiskenler.currentEpigramNotifier.value = secilenSoz;
+        print("Rastgele Seçilen Söz: $secilenSoz");*/
+        degiskenler.listSozler = sozlerListesi;
+      }
+      else {
+        print("Söz listesi boş.");
+      }
+    }
+    else {
+      print("Verilerde 'sozler' anahtarı bulunamadı.");
+    }
+  });
+  jsonMenba.then((jsonData) {
+    int versiyon = jsonData["versiyon"];
+    //print("versiyon: $versiyon");
+
+    int dinlemeListesiID = jsonData["aktifliste"]["dinlemeListesiID"];
+    //print("dinlemeListesiID: $dinlemeListesiID");
+
+    List<dynamic> dinlemeListeleri = jsonData["dinlemeListeleri"];
+    for (var item in dinlemeListeleri) {
+      int id = item["id"];
+      String link = item["link"];
+      String caption = item["caption"];
+      String explanation = item["explanation"];
+      if (id == dinlemeListesiID) {
+        compute(getirJsonData, "${Degiskenler.kaynakYolu}/kaynak/$link.json")
+            .then((data) {
+          List<dynamic> listDinle = data["sesler"];
+          //setPlaylist(listDinle.reversed.toList());
+          setPlaylist(listDinle);
+          //print(degiskenler.listDinle);
+        });
+      }
+      //print("id: $id, link: $link, caption: $caption, explanation: $explanation");
+    }
+
+    Map<String, dynamic> bildirim = jsonData["bildirim"];
+    bildirimKontrol(bildirim);
+
+    degiskenler.versionMenba = versiyon;
+    degiskenler.dinlemeListeleri = dinlemeListeleri;
+
+    //print(jsonData["aktifliste"]);
+  });
+
+  Degiskenler.hazirlaniyor=false;
+  //print(result); // İşlem sonucunu burada kullanabilirsiniz
+}
 void setPlaylist(data) {
   //print("LAVANTA ${data[0]}");
 
@@ -491,7 +690,7 @@ void setPlaylist(data) {
           album: item['parca_adi'],
           title: item['parca_adi'],
           artUri: Uri.parse(
-            "${degiskenler.kaynakYolu}/atesiask/bahar11.jpg",
+            "${Degiskenler.kaynakYolu}/atesiask/bahar11.jpg",
           ),
           artist: item['seslendiren'],
         ),
@@ -501,97 +700,60 @@ void setPlaylist(data) {
 
   _audioService.setPlaylist(playlist);
 }
-/*
-Future<void> initializeAudioService() async {
-  await _audioService.init();
-  print("initializeAudioServiceinitializeAudioServiceinitializeAudioServiceinitializeAudioService");
+void bildirimKontrol(bildirim) async {
+  String vakit1Str = bildirim["vakit1"];
+  String vakit2Str = bildirim["vakit2"];
+
+  // Veriyi ayrıştırma işlevi
+  DateTime parseDateTime(String dateStr) {
+    List<String> parts = dateStr.split(" "); // Boşluğa göre böleriz
+    List<String> dateParts = parts[0].split("/"); // Tarihi ayırırız
+    List<String> timeParts = parts[1].split(":"); // Saati ayırırız
+
+    int day = int.parse(dateParts[0]);
+    int month = int.parse(dateParts[1]);
+    int year = int.parse(dateParts[2]);
+    int hour = int.parse(timeParts[0]);
+    int minute = int.parse(timeParts[1]);
+
+    return DateTime(year, month, day, hour, minute);
+  }
+
+  DateTime vakit1 = parseDateTime(vakit1Str);
+  DateTime vakit2 = parseDateTime(vakit2Str);
+
+  DateTime now = DateTime.now().toUtc(); // Şu anki tarihi UTC saat dilimine çevir
+  DateTime suAn = now.add(Duration(hours: 3)); // 3 saat ekleyerek gelecekteki bir zamanı hesapla
+
+  //print("KONTROLL $suAn ==> $vakit1, $vakit2");
+
+  if (suAn.isAfter(vakit1) && suAn.isBefore(vakit2)) { //bildirim zamanında mıyız
+    print("Bildirim ==> Şu an vakit1 ve vakit2 arasında.");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? yanit = prefs.getString('bildirim') ?? "bos"; // Eğer değer yoksa false kullan
+    if (yanit.isNotEmpty && yanit!=bildirim["metin"]){
+      Degiskenler.currentNoticeNotifier.value = bildirim["metin"];
+      //Degiskenler.showDialogNotifier.value = true;
+    }
+
+  }
+  else {
+    print("Bildirim ==> Şu an vakit1 ve vakit2 arasında değil.");
+  }
 }
-*/
-void arkaplanIslemleri() async {
-  Degiskenler.hazirlaniyor=true;
-  _audioService.init();
+Future<Map<String, dynamic>> getirJsonData(String yol) async {
+  final HttpService _httpService = HttpService();
+  print("getirJsonData $yol");
 
-  final Future<Map<String, dynamic>> jsonMenba =
-      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/menba.json");
-  final Future<Map<String, dynamic>> jsonSozler =
-      compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/sozler.json");
-  final Future<Map<String, dynamic>> jsonFotograflar = compute(
-      getirJsonData, "${degiskenler.kaynakYolu}/kaynak/fotograflar.json");
+  try {
+    final jsonStr = await _httpService.fetchData(yol);
 
-  //_showDialogStreamController.add(true); // Diyaloğu göstermek için Stream'e true değeri gönder
-  // 10 saniye sonra diyaloğu gizlemek için bir Timer kullanın
-  /*Timer(Duration(seconds: 5), () {
-        _showDialogStreamController.add(false);
-      });*/
-  jsonFotograflar.then((jsonDataMap) {
-    if (jsonDataMap.containsKey("fotograflar")) {
-      final List<dynamic> fotograflarListesi = jsonDataMap["fotograflar"];
-      if (fotograflarListesi.isNotEmpty) {
-        /*final Random random = Random();
-        final int randomIndex = random.nextInt(fotograflarListesi.length);
-        final String secilen = fotograflarListesi[randomIndex]['path'];
-        Degiskenler.currentImageNotifier.value = secilen;*/
-        //print("Rastgele Seçilen fotograf: $secilen");
-        LOG('Bu bir log mesajıdır.');
-        //print(logMessage);
-        degiskenler.listFotograflar = fotograflarListesi;
-      } else {
-        LOG("fotograf listesi boş.");
-      }
-    }
-    else {
-      LOG("Verilerde 'fotograf' anahtarı bulunamadı.");
-    }
-  });
-  jsonSozler.then((jsonDataMap) {
-    if (jsonDataMap.containsKey("sozler")) {
-      final List<dynamic> sozlerListesi = jsonDataMap["sozler"];
-      if (sozlerListesi.isNotEmpty) {
-        final Random random = Random();
-        final int randomIndex = random.nextInt(sozlerListesi.length);
-        final String secilenSoz = sozlerListesi[randomIndex];
-        Degiskenler.currentEpigramNotifier.value = secilenSoz;
-        LOG("Rastgele Seçilen Söz: $secilenSoz");
-        degiskenler.listSozler = sozlerListesi;
-      } else {
-        LOG("Söz listesi boş.");
-      }
-    } else {
-      LOG("Verilerde 'sozler' anahtarı bulunamadı.");
-    }
-  });
-  jsonMenba.then((jsonData) {
-    int versiyon = jsonData["versiyon"];
-    //print("versiyon: $versiyon");
-
-    int dinlemeListesiID = jsonData["aktifliste"]["dinlemeListesiID"];
-    //print("dinlemeListesiID: $dinlemeListesiID");
-
-    List<dynamic> dinlemeListeleri = jsonData["dinlemeListeleri"];
-    for (var item in dinlemeListeleri) {
-      int id = item["id"];
-      String link = item["link"];
-      String caption = item["caption"];
-      String explanation = item["explanation"];
-      if (id == dinlemeListesiID) {
-        compute(getirJsonData, "${degiskenler.kaynakYolu}/kaynak/$link.json")
-            .then((data) {
-          List<dynamic> listDinle = data["sesler"];
-          setPlaylist(listDinle);
-          //print(degiskenler.listDinle);
-        });
-      }
-      //print("id: $id, link: $link, caption: $caption, explanation: $explanation");
-    }
-
-    degiskenler.versionMenba = versiyon;
-    degiskenler.dinlemeListeleri = dinlemeListeleri;
-
-    //print(jsonData["aktifliste"]);
-  });
-
-  Degiskenler.hazirlaniyor=false;
-  //print(result); // İşlem sonucunu burada kullanabilirsiniz
+    final jsonDataList = JsonHelper.parseJson(
+        jsonStr); // Bu satırı kullanmanıza gerek yok, veri zaten bir liste
+    return jsonDataList; // Gelen veriyi doğrudan döndürüyoruz
+  } catch (error) {
+    throw Exception('Veri çekilirken bir hata oluştu: $error');
+  }
 }
 
 class Base64ImageWidget extends StatefulWidget {
@@ -614,7 +776,7 @@ class _Base64ImageWidgetState extends State<Base64ImageWidget> {
         _currentImageUrl = imageUrl; // imageUrl'i güncelle
       });
     } catch (e) {
-      LOG('Resim indirme hatası: $e');
+      print('Resim indirme hatası: $e');
     }
   }
 

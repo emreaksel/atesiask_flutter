@@ -9,7 +9,7 @@ class HttpService {
   HttpService();
 
   Future<String> fetchData(String path, {String encoding = 'utf8'}) async {
-    LOG("HttpService-fetchData yolu: " + path);
+    //LOG("HttpService-fetchData yolu: " + path);
     final response = await http.get(Uri.parse(path));
 
     if (response.statusCode == 200) {
@@ -21,7 +21,7 @@ class HttpService {
     }
   }
   Future<Uint8List> fetchBytes(String path) async {
-    LOG("HttpService-fetchBytes yolu: " + path);
+    //LOG("HttpService-fetchBytes yolu: " + path);
     final response = await http.get(Uri.parse(path));
 
     if (response.statusCode == 200) {

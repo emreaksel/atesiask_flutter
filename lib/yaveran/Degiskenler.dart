@@ -1,7 +1,5 @@
-import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 
 class Degiskenler {
   static final Degiskenler _instance = Degiskenler._internal();
@@ -10,11 +8,13 @@ class Degiskenler {
   static var hazirlaniyor=false;
   //String kaynakYolu=".";
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
-  String kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
+  static var kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
 
   static var currentEpigramNotifier = ValueNotifier<String>('...');
   static var currentImageNotifier = ValueNotifier<String>('');
   static var songListNotifier = ValueNotifier<List<dynamic>>([]);
+  static var currentNoticeNotifier = ValueNotifier<String>('Hoşgeldin Güzeller Güzelim...');
+  static var showDialogNotifier = ValueNotifier<bool>(false);
 
   List<dynamic> dinlemeListeleri=[];
   List<dynamic> listSozler=[];
