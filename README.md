@@ -1,4 +1,4 @@
-# bizidealcennetine
+# bizideal
 
 A new Flutter project.
 
