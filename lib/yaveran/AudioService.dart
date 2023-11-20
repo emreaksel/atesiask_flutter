@@ -8,8 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:rxdart/rxdart.dart';
-
-import 'Log.dart';
 import 'Notifier.dart';
 
 class AudioService {
@@ -149,6 +147,7 @@ class AudioService {
       seslendiren = degiskenler.listDinle[index]["seslendiren"];
       currentSongTitleNotifier.value = parca_adi;
       currentSongSubTitleNotifier.value = seslendiren;
+      Degiskenler.parcaIndex=degiskenler.listDinle[index]["sira_no"];
     }
     if (index != null) ilkkez=index; //ilk parça listenin hep ilk parçası oluyordu bunu engelledik ayrıca playlist yüklenince direkt next yapıyor
     /*if (index >= 0 && index < parca_listesi.length) {

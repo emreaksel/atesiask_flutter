@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:bizidealcennetine/yaveran/Log.dart';
-import 'package:bizidealcennetine/yaveran/widgets_audio.dart';
+import 'package:bizidealcennetine/yaveran/widgets.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:bizidealcennetine/yaveran/Notifier.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
@@ -28,6 +28,9 @@ void main() {
   runApp(MyApp());
   if(!Degiskenler.hazirlaniyor) arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
 }
+
+
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -194,7 +197,7 @@ class LoadingWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
                 Image.asset(
-                  'images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
+                  'assets/images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
                   height: MediaQuery.of(context).size.height * 0.12, // Yarı yükseklik
                 ),
                 /*const Text(
@@ -213,7 +216,7 @@ class LoadingWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Image.asset(
-                  'images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
+                  'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
                   height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
                 ),
                 Text(
@@ -481,7 +484,7 @@ class CustomDialog extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
                 Image.asset(
-                  'images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
+                  'assets/images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
                   height: MediaQuery.of(context).size.height * 0.12, // Yarı yükseklik
                 ),
                 /*const Text(
@@ -649,6 +652,7 @@ void arkaplanIslemleri() async {
       String caption = item["caption"];
       String explanation = item["explanation"];
       if (id == dinlemeListesiID) {
+        Degiskenler.liste_link=link;
         compute(getirJsonData, "${Degiskenler.kaynakYolu}/kaynak/$link.json")
             .then((data) {
           List<dynamic> listDinle = data["sesler"];
@@ -803,11 +807,11 @@ class _Base64ImageWidgetState extends State<Base64ImageWidget> {
               fit: BoxFit.cover,
             )
                 : Image.asset(
-              'images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
+              'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
               height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
             );
           } else return Image.asset(
-            'images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
+            'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
             height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
           );
 

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.ryanheise.just_audio_example"
+    package="com.ea.bizidealcennetine"
     tools:ignore="Instantiatable">
 
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -30,6 +30,17 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="benolanben.com"
+                    android:pathPrefix="/dinle"/>
+            </intent-filter>
+
         </activity>
 
         <service

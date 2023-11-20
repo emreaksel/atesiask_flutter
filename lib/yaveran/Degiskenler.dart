@@ -9,6 +9,8 @@ class Degiskenler {
   //String kaynakYolu=".";
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
   static var kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
+  static var parcaIndex=-1;
+  static var liste_link="baska";
 
   static var currentEpigramNotifier = ValueNotifier<String>('...');
   static var currentImageNotifier = ValueNotifier<String>('');

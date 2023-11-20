@@ -1,9 +1,11 @@
+
+import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-
-import '../main.dart';
+import 'package:share_plus/share_plus.dart';
 import 'AudioService.dart';
 import 'Notifier.dart';
 import 'audio_video_progress_bar.dart';
@@ -285,6 +287,48 @@ class BackButton extends StatelessWidget {
         });
   }
 }
+class ShareButton extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return IconButton(
+      icon: SvgPicture.asset(
+        'assets/icons/bird.svg',
+        width: calculateIconSize(context, ekranBoyutNotifier),
+        height: calculateIconSize(context, ekranBoyutNotifier),
+        //color: Colors.red, // İstenilen rengi belirtin
+      ),
+      onPressed: () {
+        Share.share('https://benolanben.com/dinle/${Degiskenler.liste_link}&${Degiskenler.parcaIndex}');
+      },
+    );
+  }
+}
+class LikeButton extends StatelessWidget {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return Opacity(
+      opacity: 0.0, // 0.0, yani tamamen şeffaf olacak şekilde ayarlanmıştır
+      child: IconButton(
+        icon: const Icon(
+          FontAwesomeIcons.heart,
+          color: Colors.white,
+        ),
+        iconSize: calculateIconSize(context, ekranBoyutNotifier),
+        onPressed: () {
+          // Butona tıklandığında yapılacak işlemler
+        },
+      ),
+    );
+  }
+}
 
 class AudioControlButtons extends StatelessWidget {
   late EkranBoyutNotifier ekranBoyutNotifier;
@@ -314,8 +358,20 @@ class AudioControlButtons extends StatelessWidget {
             children: [
               Column(
                 children: [
-                  CurrentSongTitle(),
-                  CurrentSongSubTitle(),
+                  Row(
+                    children: [
+                      ShareButton(),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            CurrentSongTitle(),
+                            CurrentSongSubTitle(),
+                          ],
+                        ),
+                      ),
+                      LikeButton(),
+                    ],
+                  ),
                   SeekBar(),
                 ],
               )
@@ -342,3 +398,4 @@ class AudioControlButtons extends StatelessWidget {
     );
   }
 }
+

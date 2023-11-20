@@ -1,4 +1,4 @@
-package com.example.bizidealcennetine
+package com.ea.bizidealcennetine
 
 import io.flutter.embedding.android.FlutterActivity
 
