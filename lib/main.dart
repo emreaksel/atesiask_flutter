@@ -14,6 +14,7 @@ import 'package:kenburns_nullsafety/kenburns_nullsafety.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:text_scroll/text_scroll.dart';
+import 'package:uni_links/uni_links.dart';
 import 'yaveran/HttpService.dart';
 import 'yaveran/JsonHelper.dart';
 import 'yaveran/AudioService.dart';
@@ -29,7 +30,17 @@ void main() {
   if(!Degiskenler.hazirlaniyor) arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
 }
 
-
+Future<void> initUniLinks() async {
+  // Platform messages may fail, so we use a try/catch PlatformException.
+  try {
+    final initialLink = await getInitialLink();
+    // Parse the link and warn the user, if it is not correct,
+    // but keep in mind it could be `null`.
+  } on PlatformException {
+    // Handle exception by warning the user their action did not succeed
+    // return?
+  }
+}
 
 
 class MyApp extends StatelessWidget {
@@ -215,12 +226,15 @@ class LoadingWidget extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Image.asset(
-                  'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
-                  height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
+                Padding(
+                  padding: EdgeInsets.only(left: 8.0),
+                  child: Image.asset(
+                    'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
+                    height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
+                  ),
                 ),
                 Text(
-                  '       Mana Yükleniyor...', // Başlık metni
+                  '  Mana Yükleniyor...', // Başlık metni
                   style: TextStyle(
                     fontSize: calculateFontSize(context, ekranBoyutNotifier),
                     color: Colors.white,

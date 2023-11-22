@@ -37,8 +37,12 @@ class PlayButton extends StatelessWidget {
         switch (value) {
           case ButtonState.paused:
             return IconButton(
-              icon: const Icon(FontAwesomeIcons.play, color: Colors.white),
-              iconSize: calculateIconSize(context, ekranBoyutNotifier),
+              icon: SvgPicture.asset(
+                'assets/icons/play-button.svg',
+                width: calculateIconSize(context, ekranBoyutNotifier),
+                height: calculateIconSize(context, ekranBoyutNotifier),
+                //color: Colors.red, // İstenilen rengi belirtin
+              ),
               // Dinamik ikon boyutu kullanılıyor
               onPressed: () {
                 _audioService.play();
@@ -46,9 +50,12 @@ class PlayButton extends StatelessWidget {
             );
           case ButtonState.playing || ButtonState.loading:
             return IconButton(
-              icon: const Icon(FontAwesomeIcons.pause,
-                  color: Colors.white),
-              iconSize: calculateIconSize(context, ekranBoyutNotifier),
+              icon: SvgPicture.asset(
+                'assets/icons/pause-button.svg',
+                width: calculateIconSize(context, ekranBoyutNotifier),
+                height: calculateIconSize(context, ekranBoyutNotifier),
+                //color: Colors.red, // İstenilen rengi belirtin
+              ),
               // Dinamik ikon boyutu kullanılıyor
               onPressed: () {
                 _audioService.pause();
@@ -157,9 +164,11 @@ class RepeatButton extends StatelessWidget {
         switch (value) {
           case RepeatState.off:
             return IconButton(
-                icon: const Icon(
-                  FontAwesomeIcons.shuffle,
-                  color: Colors.white,
+                icon: SvgPicture.asset(
+                  'assets/icons/shuffle.svg',
+                  width: calculateIconSize(context, ekranBoyutNotifier),
+                  height: calculateIconSize(context, ekranBoyutNotifier),
+                  //color: Colors.red, // İstenilen rengi belirtin
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -167,9 +176,11 @@ class RepeatButton extends StatelessWidget {
                 });
           case RepeatState.on:
             return IconButton(
-                icon: const Icon(
-                  FontAwesomeIcons.repeat,
-                  color: Colors.white,
+                icon: SvgPicture.asset(
+                  'assets/icons/repeat.svg',
+                  width: calculateIconSize(context, ekranBoyutNotifier),
+                  height: calculateIconSize(context, ekranBoyutNotifier),
+                  //color: Colors.red, // İstenilen rengi belirtin
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -200,9 +211,11 @@ class PreviousSongButton extends StatelessWidget {
             );
           case ButtonState.paused || ButtonState.playing:
             return IconButton(
-                icon: const Icon(
-                  FontAwesomeIcons.backwardStep,
-                  color: Colors.white,
+                icon: SvgPicture.asset(
+                  'assets/icons/previous-button.svg',
+                  width: calculateIconSize(context, ekranBoyutNotifier),
+                  height: calculateIconSize(context, ekranBoyutNotifier),
+                  //color: Colors.red, // İstenilen rengi belirtin
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -233,9 +246,11 @@ class NextSongButton extends StatelessWidget {
             );
           case ButtonState.paused || ButtonState.playing:
             return IconButton(
-                icon: const Icon(
-                  FontAwesomeIcons.forwardStep,
-                  color: Colors.white,
+                icon: SvgPicture.asset(
+                  'assets/icons/next-button.svg',
+                  width: calculateIconSize(context, ekranBoyutNotifier),
+                  height: calculateIconSize(context, ekranBoyutNotifier),
+                  //color: Colors.red, // İstenilen rengi belirtin
                 ),
                 iconSize: calculateIconSize(context, ekranBoyutNotifier),
                 onPressed: () {
@@ -255,11 +270,12 @@ class ListButton extends StatelessWidget {
     ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
 
     return IconButton(
-        icon: const Icon(
-          FontAwesomeIcons.listCheck,
-          color: Colors.white,
+        icon: SvgPicture.asset(
+          'assets/icons/playlist.svg',
+          width: calculateIconSize(context, ekranBoyutNotifier)*0.8,
+          height: calculateIconSize(context, ekranBoyutNotifier)*0.8,
+          //color: Colors.red, // İstenilen rengi belirtin
         ),
-        iconSize: calculateIconSize(context, ekranBoyutNotifier),
         onPressed: () {
           ekranBoyutNotifier.ustEkranAktifIndex = 1;
           ekranBoyutNotifier.altEkranBoyut = 17;
@@ -360,7 +376,8 @@ class AudioControlButtons extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      ShareButton(),
+                      LikeButton(),
+
                       Expanded(
                         child: Column(
                           children: [
@@ -369,7 +386,7 @@ class AudioControlButtons extends StatelessWidget {
                           ],
                         ),
                       ),
-                      LikeButton(),
+                      ShareButton(),
                     ],
                   ),
                   SeekBar(),
