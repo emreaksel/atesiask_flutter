@@ -28,12 +28,14 @@ AkanYazi _akanYazi =
 void main() {
   runApp(MyApp());
   if(!Degiskenler.hazirlaniyor) arkaplanIslemleri(); // Uygulama başladığında hemen çalıştır
+  initUniLinks();
 }
 
 Future<void> initUniLinks() async {
   // Platform messages may fail, so we use a try/catch PlatformException.
   try {
     final initialLink = await getInitialLink();
+    print("initialLink $initialLink");
     // Parse the link and warn the user, if it is not correct,
     // but keep in mind it could be `null`.
   } on PlatformException {
@@ -41,7 +43,6 @@ Future<void> initUniLinks() async {
     // return?
   }
 }
-
 
 class MyApp extends StatelessWidget {
   @override
@@ -111,10 +112,6 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
   void initState() {
     super.initState();
   }
-  void closeDialog() {
-    //Değişen değeri bildirerek listener'ları tetikleyin.
-    Degiskenler.showDialogNotifier.value=false;
-  }
   @override
   Widget build(BuildContext context) {
     final ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context);
@@ -143,6 +140,20 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
         Stack(
           fit: StackFit.expand,
           children: [
+            Positioned.fill(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: Degiskenler.showDialogNotifier,
+                builder: (context, goster, child) {
+                  return Visibility(
+                    visible: goster,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: CustomDialog(icerik: Degiskenler.currentNoticeNotifier.value),
+                    ),
+                  );
+                },
+              ),
+            ),
             ValueListenableBuilder<ButtonState>( //mana yükleniyor
               valueListenable: AudioService.playButtonNotifier,
               builder: (context, value, child) {
@@ -157,21 +168,6 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
                 }
               },
             ),
-            Positioned.fill(
-              child: ValueListenableBuilder<bool>(
-                valueListenable: Degiskenler.showDialogNotifier,
-                builder: (context, goster, child) {
-                  return Visibility(
-                    visible: goster,
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: CustomDialog(onClose: closeDialog),
-                    ),
-                  );
-                },
-              ),
-            )
-
           ],
         ),
 
@@ -179,7 +175,6 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
     );
   }
 }
-
 class LoadingWidget extends StatelessWidget {
   double calculateFontSize(BuildContext context, EkranBoyutNotifier ekranBoyutNotifier) {
     double screenHeight = MediaQuery.of(context).size.height;
@@ -249,7 +244,6 @@ class LoadingWidget extends StatelessWidget {
     );
   }
 }
-
 class KenBurnsViewWidget extends StatefulWidget {
   @override
   _KenBurnsViewWidgetState createState() => _KenBurnsViewWidgetState();
@@ -279,7 +273,6 @@ class _KenBurnsViewWidgetState extends State<KenBurnsViewWidget> {
     );
   }
 }
-
 class AkanYazi extends StatelessWidget {
   final String text;
 
@@ -334,7 +327,6 @@ class AkanYazi extends StatelessWidget {
     );
   }
 }
-
 class ListeWidget extends StatefulWidget {
   @override
   _ListeWidgetState createState() => _ListeWidgetState();
@@ -345,7 +337,24 @@ class _ListeWidgetState extends State<ListeWidget> {
   List<dynamic> filteredSongList = []; // Filtrelenmiş şarkı listesi
   String searchText = "";
   late EkranBoyutNotifier ekranBoyutNotifier;
+  FocusNode _focusNode = FocusNode();
+  Timer? _timer;
 
+  @override
+  void dispose() {
+    _focusNode.dispose(); // Ekran kapatıldığında FocusNode'u temizle
+    _timer?.cancel(); // Timer'ı iptal et
+    super.dispose();
+  }
+  void _autoUnfocus() {
+    // Belirli bir süre sonra klavyeyi kapat
+    _timer?.cancel(); // Önceki Timer'ı iptal et
+    _timer = Timer(Duration(seconds: 3), () {
+      if (_focusNode.hasFocus) {
+        _focusNode.unfocus();
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
@@ -368,6 +377,7 @@ class _ListeWidgetState extends State<ListeWidget> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
+              focusNode: _focusNode, // FocusNode'u TextField'a atayın
               controller: _searchController, // Arama çubuğu kontrolcüsü
               onChanged: (value) {
                 // Arama çubuğundaki değeri alın
@@ -398,22 +408,18 @@ class _ListeWidgetState extends State<ListeWidget> {
                       replaceTurkishCharacters(singerName)
                           .contains(replaceTurkishCharacters(searchText));
                 }).toList();
-
-                String replaceTurkishCharacters(String text) {
-                  text = text.replaceAll("â", "a");
-                  text = text.replaceAll("ş", "s");
-                  text = text.replaceAll("ö", "o");
-                  text = text.replaceAll("ü", "u");
-                  text = text.replaceAll("ı", "i");
-                  text = text.replaceAll("ç", "c");
-                  text = text.replaceAll("ğ", "g");
-                  return text;
-                }
-
                 // Filtrelenmiş liste ile UI'yi güncelleyin
                 setState(() {
                   filteredSongList = filteredList;
                 });
+                _autoUnfocus();
+              },
+              onTap: () {
+                // TextField'a tıklandığında klavyenin otomatik kapanmasını iptal et
+                if (_focusNode.hasFocus) {
+                  _focusNode.unfocus();
+                } else _autoUnfocus(); // Klavyeyi otomatik kapatmak için
+
               },
               decoration: InputDecoration(
                 hintText: "Ara...", // Arama çubuğunda görüntülenen metin
@@ -478,12 +484,35 @@ class _ListeWidgetState extends State<ListeWidget> {
 }
 
 class CustomDialog extends StatelessWidget {
-  final VoidCallback onClose;
+  final String buttonText;
+  final String icerik;
 
-  CustomDialog( {required this.onClose});
+  CustomDialog({
+    required this.icerik,
+  }) : buttonText = icerik.contains('https://benolanben.com/dinle/') ? 'Dinle' : 'Teşekkürler';
+
+  void closeDialog() {
+    //Değişen değeri bildirerek listener'ları tetikleyin.
+    Degiskenler.showDialogNotifier.value=false;
+  }
+  void hediye() {
+    var hediye=icerik.replaceAll('https://benolanben.com/dinle/', '');
+    var link=hediye.split('&')[0];
+    var id=hediye.split('&')[1];
+    if (link.isNotEmpty && id.isNotEmpty) {
+      // Your code here when link and id are not empty
+      print('Link: $link');
+      print('ID: $id');
+    } else {
+      // Your code here when link or id is empty
+      print('Link or ID is empty.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    String noticeText = icerik.contains('https://benolanben.com/dinle/') ? ' ... dinle; hediyeyi duyacaksın' : icerik;
+
     return Center(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.59, // Yarı genişlik
@@ -494,52 +523,49 @@ class CustomDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget>[
-                Image.asset(
-                  'assets/images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
-                  height: MediaQuery.of(context).size.height * 0.12, // Yarı yükseklik
-                ),
-                /*const Text(
-                  'ATEŞ-İ AŞK  ', // Başlık metni
-                  style: TextStyle(
-                    fontSize: 21.0,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.only(top:9.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Image.asset(
+                    'assets/images/atesiask.jpg', // Kullanmak istediğiniz resmin yolunu belirtin
+                    height: MediaQuery.of(context).size.height * 0.12, // Yarı yükseklik
                   ),
-                ),*/
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 16.0), // Boşluk eklemek için
             //Text('),
             Padding(
               padding: EdgeInsets.all(16.0), // Yastıklama (padding) ekleyin
-              child: ValueListenableBuilder<String>(
-                valueListenable: Degiskenler.currentNoticeNotifier,
-                builder: (context, notice, child) {
-                  return SelectableText(
-                    notice, // Degiskenler.currentNoticeNotifier.value
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  );
-                },
-              )
+              child: SelectableText(
+                noticeText,
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
             ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('bildirim_goster', true);
-                onClose();
-              },
-              style: ElevatedButton.styleFrom(
-                primary: Colors.black,
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16.0), // Padding ekleyin
-                child: Text('Teşekkürler'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 18.0),
+              child: ElevatedButton(
+                onPressed: () async {
+                  if(icerik.contains('https://benolanben.com/dinle/')){
+                    hediye();
+                  } else {
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('bildirim_goster', true);
+                    closeDialog();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16.0), // Padding ekleyin
+                  child: Text(buttonText),
+                ),
               ),
             ),
           ],
@@ -751,7 +777,7 @@ void bildirimKontrol(bildirim) async {
     String? yanit = prefs.getString('bildirim') ?? "bos"; // Eğer değer yoksa false kullan
     if (yanit.isNotEmpty && yanit!=bildirim["metin"]){
       Degiskenler.currentNoticeNotifier.value = bildirim["metin"];
-      //Degiskenler.showDialogNotifier.value = true;
+      Degiskenler.showDialogNotifier.value = true;
     }
 
   }
@@ -824,7 +850,8 @@ class _Base64ImageWidgetState extends State<Base64ImageWidget> {
               'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
               height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
             );
-          } else return Image.asset(
+          }
+          else return Image.asset(
             'assets/images/loading.gif', // Kullanmak istediğiniz resmin yolunu belirtin
             height: MediaQuery.of(context).size.height * 0.05, // Yarı yükseklik
           );

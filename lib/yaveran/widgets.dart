@@ -38,9 +38,9 @@ class PlayButton extends StatelessWidget {
           case ButtonState.paused:
             return IconButton(
               icon: SvgPicture.asset(
-                'assets/icons/play-button.svg',
-                width: calculateIconSize(context, ekranBoyutNotifier),
-                height: calculateIconSize(context, ekranBoyutNotifier),
+                'assets/icons/play.svg',
+                width: calculateIconSize(context, ekranBoyutNotifier)*0.8,
+                height: calculateIconSize(context, ekranBoyutNotifier)*0.8,
                 //color: Colors.red, // İstenilen rengi belirtin
               ),
               // Dinamik ikon boyutu kullanılıyor
@@ -51,9 +51,9 @@ class PlayButton extends StatelessWidget {
           case ButtonState.playing || ButtonState.loading:
             return IconButton(
               icon: SvgPicture.asset(
-                'assets/icons/pause-button.svg',
-                width: calculateIconSize(context, ekranBoyutNotifier),
-                height: calculateIconSize(context, ekranBoyutNotifier),
+                'assets/icons/pause.svg',
+                width: calculateIconSize(context, ekranBoyutNotifier)*0.8,
+                height: calculateIconSize(context, ekranBoyutNotifier)*0.8,
                 //color: Colors.red, // İstenilen rengi belirtin
               ),
               // Dinamik ikon boyutu kullanılıyor
@@ -212,7 +212,7 @@ class PreviousSongButton extends StatelessWidget {
           case ButtonState.paused || ButtonState.playing:
             return IconButton(
                 icon: SvgPicture.asset(
-                  'assets/icons/previous-button.svg',
+                  'assets/icons/previous.svg',
                   width: calculateIconSize(context, ekranBoyutNotifier),
                   height: calculateIconSize(context, ekranBoyutNotifier),
                   //color: Colors.red, // İstenilen rengi belirtin
@@ -247,7 +247,7 @@ class NextSongButton extends StatelessWidget {
           case ButtonState.paused || ButtonState.playing:
             return IconButton(
                 icon: SvgPicture.asset(
-                  'assets/icons/next-button.svg',
+                  'assets/icons/next.svg',
                   width: calculateIconSize(context, ekranBoyutNotifier),
                   height: calculateIconSize(context, ekranBoyutNotifier),
                   //color: Colors.red, // İstenilen rengi belirtin
