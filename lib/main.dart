@@ -36,6 +36,13 @@ Future<void> initUniLinks() async {
   try {
     final initialLink = await getInitialLink();
     print("initialLink $initialLink");
+    if (initialLink!=null) {
+      Degiskenler.currentNoticeNotifier.value=initialLink;
+      Degiskenler.showDialogNotifier.value = true;
+    }
+    Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
+    Degiskenler.showDialogNotifier.value = true;
+
     // Parse the link and warn the user, if it is not correct,
     // but keep in mind it could be `null`.
   } on PlatformException {
@@ -503,15 +510,18 @@ class CustomDialog extends StatelessWidget {
       // Your code here when link and id are not empty
       print('Link: $link');
       print('ID: $id');
-    } else {
+      _audioService.addTrackToPlaylist('adımız','sesimiz','https://www.mediafire.com/file/8srljirmndryh4l/secret_yemre.mp3',99999,);
+    }
+    else {
       // Your code here when link or id is empty
       print('Link or ID is empty.');
     }
+    closeDialog();
   }
 
   @override
   Widget build(BuildContext context) {
-    String noticeText = icerik.contains('https://benolanben.com/dinle/') ? ' ... dinle; hediyeyi duyacaksın' : icerik;
+    String noticeText = icerik.contains('https://benolanben.com/dinle/') ? ' Dinle! Hediyeyi Duyacaksın' : icerik;
 
     return Center(
       child: Container(
@@ -553,7 +563,8 @@ class CustomDialog extends StatelessWidget {
                 onPressed: () async {
                   if(icerik.contains('https://benolanben.com/dinle/')){
                     hediye();
-                  } else {
+                  }
+                  else {
                     SharedPreferences prefs = await SharedPreferences.getInstance();
                     await prefs.setBool('bildirim_goster', true);
                     closeDialog();
@@ -575,52 +586,6 @@ class CustomDialog extends StatelessWidget {
   }
 }
 
-
-/*class SplashScreen extends StatefulWidget {
-  @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Burada gerekli işlemleri yapabilirsiniz (örneğin: veri yükleme, hazırlık vs.)
-    // Ardından bir süre bekleyerek ana ekranı açabiliriz.
-    // Initialize the AudioService first
-    initializeAudioService();
-
-    Future.delayed(Duration(seconds: 4), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => MainScreen()), // Ana ekran burada açılır
-      );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black, // Splash ekran rengi
-      body: Center(
-        child: Text(
-          'My App', // Splash ekran metni
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 24.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}*/
-/*
-Future<void> initializeAudioService() async {
-  await _audioService.init();
-  print("initializeAudioServiceinitializeAudioServiceinitializeAudioServiceinitializeAudioService");
-}
-*/
 void arkaplanIslemleri() async {
   Degiskenler.hazirlaniyor=true;
   _audioService.init();
@@ -776,8 +741,10 @@ void bildirimKontrol(bildirim) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? yanit = prefs.getString('bildirim') ?? "bos"; // Eğer değer yoksa false kullan
     if (yanit.isNotEmpty && yanit!=bildirim["metin"]){
-      Degiskenler.currentNoticeNotifier.value = bildirim["metin"];
-      Degiskenler.showDialogNotifier.value = true;
+      if(!Degiskenler.currentNoticeNotifier.value.contains('https://benolanben.com/dinle/')) {
+        Degiskenler.currentNoticeNotifier.value = bildirim["metin"];
+        Degiskenler.showDialogNotifier.value = true;
+      }
     }
 
   }

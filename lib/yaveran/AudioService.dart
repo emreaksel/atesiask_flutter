@@ -141,6 +141,40 @@ class AudioService {
       print(stackTrace);
     }
   }
+  Future<void> addTrackToPlaylist(adi,ses,yol,sira,) async {
+    // 1. Yeni parçayı songListNotifier değişkenine ekle
+    Degiskenler.songListNotifier.value.add(
+      {'sira_no': sira, 'parca_adi': adi, 'seslendiren': ses, 'url': yol}
+    );
+    // 2. Değişikliği bildirmek için ValueNotifier'ın value özelliğini güncelle
+    Degiskenler.songListNotifier.notifyListeners();
+
+    AudioSource newSource=AudioSource.uri(
+      Uri.parse(yol),
+      tag: MediaItem(
+        id: sira.toString(),
+        album: adi,
+        title: adi,
+        artUri: Uri.parse(
+          "${Degiskenler.kaynakYolu}/atesiask/bahar11.jpg",
+        ),
+        artist: ses,
+      ),
+    );
+
+    try {
+      // Mevcut çalma listesini al
+      var currentSources = (player.audioSource as ConcatenatingAudioSource).children;
+      // Yeni parçayı çalma listesine ekle
+      currentSources.add(newSource);
+      // Yeni çalma listesini ayarla
+      await player.setAudioSource(ConcatenatingAudioSource(children: currentSources));
+    } catch (e, stackTrace) {
+      print("Error adding track to playlist: $e");
+      print(stackTrace);
+    }
+  }
+
   setCurrentTrack(index){
     if (index != null && ilkkez!=-1) {
       parca_adi = degiskenler.listDinle[index]["parca_adi"];
@@ -199,11 +233,29 @@ class AudioService {
     await play();
   }
   Future<void> playAtId(int id) async {
-    if (id < 0 || id > player.audioSource!.sequence.length) {
+    /*if (id < 0 || id > player.audioSource!.sequence.length) {
       print("Invalid index: $id");
       return;
-    }
+    }*/
+    print("playAtId: $id");
     var songid=-1;
+
+    try {
+      // Mevcut çalma listesini al
+      var currentSources = (player.audioSource as ConcatenatingAudioSource).children;
+      for (var source in currentSources){
+        /*var mediaItem = source.tag as MediaItem;
+        var id = mediaItem.id;
+        print('MediaItem ID: $id');*/
+        print(source);
+        if (source != null && source.tag is MediaItem)
+
+      }
+    } catch (e, stackTrace) {
+      print("Error playAtId: $e");
+      print(stackTrace);
+    }
+
     for (var item in Degiskenler.songListNotifier.value){
       //print(item);
       if(item['sira_no']==id) {
@@ -225,6 +277,10 @@ class AudioService {
       repeatButtonNotifier.value = RepeatState.on;
     }
   }
+  Future<void> hediye() async {
+    await player.seekToNext();
+  }
+
 
   dynamic getCurrentTrackName() {
     print("Dinleniyor: ${parca_adi}");
