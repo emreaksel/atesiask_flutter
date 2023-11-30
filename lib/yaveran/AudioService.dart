@@ -133,6 +133,8 @@ class AudioService {
     try {
       //if(!_initialized) await init();
       await player.setAudioSource(ConcatenatingAudioSource(children: sources));
+      //await player.setAudioSource(ConcatenatingAudioSource(children: sources),initialIndex: 1, initialPosition: Duration.zero);
+
       //Degiskenler.songListNotifier.value=sources;
       //print("TESTTTTT ${Degiskenler.songListNotifier.value}");
       //next();
@@ -248,7 +250,7 @@ class AudioService {
         var id = mediaItem.id;
         print('MediaItem ID: $id');*/
         print(source);
-        if (source != null && source.tag is MediaItem)
+        //if (source != null && source.tag is MediaItem)
 
       }
     } catch (e, stackTrace) {
