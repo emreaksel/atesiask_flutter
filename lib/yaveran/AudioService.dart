@@ -67,10 +67,9 @@ class AudioService {
       });
 
       player.currentIndexStream.listen((index) {
-        uiSupport.changeImage();
-        uiSupport.changeEpigram();
-        setCurrentTrack(index);
 
+        setCurrentTrack(index);
+        print('--- player.currentIndexStream $index');
       });
       player.playerStateStream.listen((playerState) {
 
@@ -119,11 +118,7 @@ class AudioService {
       });
       final shuffleEnabled = player.shuffleModeEnabled;
       player.setShuffleModeEnabled(!shuffleEnabled);
-
       _initialized = true;
-
-
-
     }
   }
 
@@ -143,13 +138,13 @@ class AudioService {
       print(stackTrace);
     }
   }
-  Future<void> addTrackToPlaylist(adi,ses,yol,sira,) async {
+  Future<void> addTrackToPlaylist(adi,ses,yol,sira,oynat) async {
     // 1. Yeni parçayı songListNotifier değişkenine ekle
     Degiskenler.songListNotifier.value.add(
       {'sira_no': sira, 'parca_adi': adi, 'seslendiren': ses, 'url': yol}
     );
     // 2. Değişikliği bildirmek için ValueNotifier'ın value özelliğini güncelle
-    Degiskenler.songListNotifier.notifyListeners();
+    //Degiskenler.songListNotifier.notifyListeners();
 
     AudioSource newSource=AudioSource.uri(
       Uri.parse(yol),
@@ -170,11 +165,15 @@ class AudioService {
       // Yeni parçayı çalma listesine ekle
       currentSources.add(newSource);
       // Yeni çalma listesini ayarla
-      await player.setAudioSource(ConcatenatingAudioSource(children: currentSources));
+      //await player.setAudioSource(ConcatenatingAudioSource(children: currentSources));
+      await player.setAudioSource(ConcatenatingAudioSource(children: currentSources),initialIndex: currentSources.length-1, initialPosition: Duration.zero);
+
     } catch (e, stackTrace) {
       print("Error adding track to playlist: $e");
       print(stackTrace);
     }
+
+    if (oynat) play();
   }
 
   setCurrentTrack(index){
@@ -217,6 +216,8 @@ class AudioService {
     else await play();
   }
   Future<void> next() async {
+    uiSupport.changeImage();
+    uiSupport.changeEpigram();
     await player.seekToNext();
   }
   Future<void> previous() async {

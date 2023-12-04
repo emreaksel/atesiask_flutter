@@ -24,6 +24,7 @@ final AudioService _audioService =
     AudioService(); // AudioService nesnesini oluşturun
 AkanYazi _akanYazi =
     AkanYazi("..."); // Varsayılan metni burada belirleyebilirsiniz
+UI_support uiSupport = UI_support();
 
 void main() {
   runApp(MyApp());
@@ -40,11 +41,9 @@ Future<void> initUniLinks() async {
       Degiskenler.currentNoticeNotifier.value=initialLink;
       Degiskenler.showDialogNotifier.value = true;
     }
-    Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
-    Degiskenler.showDialogNotifier.value = true;
+    /*Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
+    Degiskenler.showDialogNotifier.value = true;*/
 
-    // Parse the link and warn the user, if it is not correct,
-    // but keep in mind it could be `null`.
   } on PlatformException {
     // Handle exception by warning the user their action did not succeed
     // return?
@@ -493,6 +492,7 @@ class _ListeWidgetState extends State<ListeWidget> {
 class CustomDialog extends StatelessWidget {
   final String buttonText;
   final String icerik;
+  late EkranBoyutNotifier ekranBoyutNotifier;
 
   CustomDialog({
     required this.icerik,
@@ -500,6 +500,10 @@ class CustomDialog extends StatelessWidget {
 
   void closeDialog() {
     //Değişen değeri bildirerek listener'ları tetikleyin.
+    ekranBoyutNotifier.ustEkranAktifIndex = 0;
+    ekranBoyutNotifier.altEkranBoyut = 20;
+    ekranBoyutNotifier.ustEkranBoyut = 80;
+
     Degiskenler.showDialogNotifier.value=false;
   }
   void hediye() {
@@ -510,7 +514,7 @@ class CustomDialog extends StatelessWidget {
       // Your code here when link and id are not empty
       print('Link: $link');
       print('ID: $id');
-      _audioService.addTrackToPlaylist('adımız','sesimiz','https://www.mediafire.com/file/8srljirmndryh4l/secret_yemre.mp3',99999,);
+      hediye_irtibat(link,id);
     }
     else {
       // Your code here when link or id is empty
@@ -518,9 +522,9 @@ class CustomDialog extends StatelessWidget {
     }
     closeDialog();
   }
-
   @override
   Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
     String noticeText = icerik.contains('https://benolanben.com/dinle/') ? ' Dinle! Hediyeyi Duyacaksın' : icerik;
 
     return Center(
@@ -584,6 +588,7 @@ class CustomDialog extends StatelessWidget {
       ),
     );
   }
+
 }
 
 void arkaplanIslemleri() async {
@@ -615,6 +620,7 @@ void arkaplanIslemleri() async {
         //print('Bu bir log mesajıdır.');
         //print(logMessage);
         degiskenler.listFotograflar = fotograflarListesi;
+        uiSupport.changeImage();
       }
       else {
         print("fotograf listesi boş.");
@@ -634,6 +640,7 @@ void arkaplanIslemleri() async {
         Degiskenler.currentEpigramNotifier.value = secilenSoz;
         print("Rastgele Seçilen Söz: $secilenSoz");*/
         degiskenler.listSozler = sozlerListesi;
+        uiSupport.changeEpigram();
       }
       else {
         print("Söz listesi boş.");
@@ -708,6 +715,26 @@ void setPlaylist(data) {
   }
 
   _audioService.setPlaylist(playlist);
+}
+void hediye_irtibat(link, id) {
+
+  compute(getirJsonData, "${Degiskenler.kaynakYolu}/kaynak/$link.json").then((data) {
+    List<dynamic> listDinle = data["sesler"];
+
+    for (var item in listDinle) {
+      if(item['sira_no'].toString()==id.toString()) {
+        _audioService.addTrackToPlaylist(
+            item['parca_adi'],
+            item['seslendiren'],
+            item['url'],
+            item['sira_no'],
+            true
+        );
+        break;
+      }
+    }
+  });
+
 }
 void bildirimKontrol(bildirim) async {
   String vakit1Str = bildirim["vakit1"];
@@ -982,4 +1009,3 @@ class _ConfettiWidgetExampleState extends State<ConfettiWidgetExample> {
     return path;
   }
 }
-

@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -261,7 +263,6 @@ class NextSongButton extends StatelessWidget {
     );
   }
 }
-
 class ListButton extends StatelessWidget {
   late EkranBoyutNotifier ekranBoyutNotifier;
 
@@ -291,11 +292,12 @@ class BackButton extends StatelessWidget {
     ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
 
     return IconButton(
-        icon: const Icon(
-          FontAwesomeIcons.arrowLeft,
-          color: Colors.white,
+        icon: SvgPicture.asset(
+          'assets/icons/back.svg',
+          width: calculateIconSize(context, ekranBoyutNotifier),
+          height: calculateIconSize(context, ekranBoyutNotifier),
+          //color: Colors.red, // İstenilen rengi belirtin
         ),
-        iconSize: calculateIconSize(context, ekranBoyutNotifier),
         onPressed: () {
           ekranBoyutNotifier.ustEkranAktifIndex = 0;
           ekranBoyutNotifier.altEkranBoyut = 20;
@@ -345,7 +347,6 @@ class LikeButton extends StatelessWidget {
     );
   }
 }
-
 class AudioControlButtons extends StatelessWidget {
   late EkranBoyutNotifier ekranBoyutNotifier;
 
