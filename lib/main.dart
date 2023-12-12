@@ -39,8 +39,8 @@ Future<void> initUniLinks() async {
       Degiskenler.currentNoticeNotifier.value=initialLink;
       Degiskenler.showDialogNotifier.value = true;
     }
-    Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
-    Degiskenler.showDialogNotifier.value = true;
+    /*Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
+    Degiskenler.showDialogNotifier.value = true;*/
 
   } on PlatformException {
     // Handle exception by warning the user their action did not succeed
