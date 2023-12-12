@@ -320,7 +320,8 @@ class ShareButton extends StatelessWidget {
         //color: Colors.red, // İstenilen rengi belirtin
       ),
       onPressed: () {
-        Share.share('https://benolanben.com/dinle/${Degiskenler.liste_link}&${Degiskenler.parcaIndex}');
+        print('INDEXXX ${Degiskenler.hediyeninIndex.toInt()}-${Degiskenler.parcaIndex}');
+        if (Degiskenler.hediyeninIndex.toInt()!=Degiskenler.parcaIndex) Share.share('https://benolanben.com/dinle/${Degiskenler.liste_link}&${Degiskenler.parcaIndex}');
       },
     );
   }

@@ -10,6 +10,7 @@ class Degiskenler {
   //String kaynakYolu="https://kardelendergisi.com/atesiask";
   static var kaynakYolu="https://raw.githubusercontent.com/emreaksel/atesiask/main/flutter";
   static var parcaIndex=-1;
+  static var hediyeninIndex=-1;
   static var liste_link="baska";
 
   static var currentEpigramNotifier = ValueNotifier<String>('...');
@@ -22,19 +23,6 @@ class Degiskenler {
   List<dynamic> listSozler=[];
   List<dynamic> listDinle=[];
   List<dynamic> listFotograflar=[];
-  /*final Map<String, List<VoidCallback>> _variableListeners = {};
-  void addListenerForVariable(String variable, VoidCallback listener) {
-    if (!_variableListeners.containsKey(variable)) {
-      _variableListeners[variable] = [];
-    }
-    _variableListeners[variable]!.add(listener);
-  }
-  void removeListenerForVariable(String variable, VoidCallback listener) {
-    _variableListeners[variable]?.remove(listener);
-  }
-  void notifyListenersForVariable(String variable) {
-    _variableListeners[variable]?.forEach((listener) => listener());
-  }*/
 
   factory Degiskenler() {
     return _instance;

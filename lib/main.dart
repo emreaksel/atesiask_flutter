@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:bizidealcennetine/yaveran/widgets.dart';
 import 'package:bizidealcennetine/yaveran/Degiskenler.dart';
 import 'package:bizidealcennetine/yaveran/Notifier.dart';
-import 'package:confetti/confetti.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -41,8 +39,8 @@ Future<void> initUniLinks() async {
       Degiskenler.currentNoticeNotifier.value=initialLink;
       Degiskenler.showDialogNotifier.value = true;
     }
-    /*Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
-    Degiskenler.showDialogNotifier.value = true;*/
+    Degiskenler.currentNoticeNotifier.value='https://benolanben.com/dinle/baska&908';
+    Degiskenler.showDialogNotifier.value = true;
 
   } on PlatformException {
     // Handle exception by warning the user their action did not succeed
@@ -154,7 +152,7 @@ class _MyCustomLayoutState extends State<MyCustomLayout> {
                     visible: goster,
                     child: Align(
                       alignment: Alignment.center,
-                      child: CustomDialog(icerik: Degiskenler.currentNoticeNotifier.value),
+                      child: CustomDialog(icerik: Degiskenler.currentNoticeNotifier.value,goster:goster),
                     ),
                   );
                 },
@@ -489,21 +487,164 @@ class _ListeWidgetState extends State<ListeWidget> {
   }
 }
 
-class CustomDialog extends StatelessWidget {
+/*class CustomDialog extends StatefulWidget {
   final String buttonText;
   final String icerik;
-  late EkranBoyutNotifier ekranBoyutNotifier;
 
   CustomDialog({
     required this.icerik,
   }) : buttonText = icerik.contains('https://benolanben.com/dinle/') ? 'Dinle' : 'Teşekkürler';
 
+  @override
+  _CustomDialogState createState() => _CustomDialogState();
+}
+
+class _CustomDialogState extends State<CustomDialog> {
+  late EkranBoyutNotifier ekranBoyutNotifier;
+  late bool gosterimde;
+
+  @override
+  void initState() {
+    super.initState();
+    gosterimde = Degiskenler.showDialogNotifier.value;
+
+    // Delay the addition of the listener to the next event loop
+    Future.delayed(Duration.zero, () {
+      Degiskenler.showDialogNotifier. addListener(_showDialogListener);
+    });
+  }
+  void _showDialogListener() {
+    if (mounted) {
+      setState(() {
+        gosterimde = Degiskenler.showDialogNotifier.value;
+        if (gosterimde) {
+          changeUI();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    Degiskenler.showDialogNotifier.removeListener(_showDialogListener);
+    super.dispose();
+  }
+  void changeUI() {
+    ekranBoyutNotifier.ustEkranAktifIndex = 0;
+    ekranBoyutNotifier.altEkranBoyut = 17;
+    ekranBoyutNotifier.ustEkranBoyut = 83;
+  }
+
   void closeDialog() {
-    //Değişen değeri bildirerek listener'ları tetikleyin.
+    ekranBoyutNotifier.ustEkranAktifIndex = 0;
+    ekranBoyutNotifier.altEkranBoyut= 20;
+    ekranBoyutNotifier.ustEkranBoyut = 80;
+    Degiskenler.showDialogNotifier.value = false;
+  }
+
+  void hediye() {
+    var hediye = widget.icerik.replaceAll('https://benolanben.com/dinle/', '');
+    var link = hediye.split('&')[0];
+    var id = hediye.split('&')[1];
+    if (link.isNotEmpty && id.isNotEmpty) {
+      // Your code here when link and id are not empty
+      print('Link: $link');
+      print('ID: $id');
+      hediye_irtibat(link, id);
+    } else {
+      // Your code here when link or id is empty
+      print('Link or ID is empty.');
+    }
+    closeDialog();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
+
+    return Center(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.59,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30.0),
+          color: Colors.black,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 9.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Image.asset(
+                    'assets/images/atesiask.jpg',
+                    height: MediaQuery.of(context).size.height * 0.12,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SelectableText(
+                widget.icerik.contains('https://benolanben.com/dinle/')
+                    ? ' Dinle! Hediyeyi Duyacaksın'
+                    : widget.icerik,
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 18.0),
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (widget.icerik.contains('https://benolanben.com/dinle/')) {
+                    hediye();
+                  } else {
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('bildirim', widget.icerik);
+                    closeDialog();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(widget.buttonText),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}*/
+class CustomDialog extends StatelessWidget {
+  final String buttonText;
+  final String icerik;
+  final bool goster;
+  late EkranBoyutNotifier ekranBoyutNotifier;
+  //final bool gosterimde= Degiskenler.showDialogNotifier.value ? true : false;
+
+  CustomDialog({
+    required this.icerik,
+    required this.goster,
+  }) : buttonText = icerik.contains('https://benolanben.com/dinle/') ? 'Dinle' : 'Teşekkürler';
+
+  void changeUI() {
+    ekranBoyutNotifier.ustEkranAktifIndex = 0;
+    ekranBoyutNotifier.altEkranBoyut = 17;
+    ekranBoyutNotifier.ustEkranBoyut = 83;
+  }
+  void closeDialog() {
     ekranBoyutNotifier.ustEkranAktifIndex = 0;
     ekranBoyutNotifier.altEkranBoyut = 20;
     ekranBoyutNotifier.ustEkranBoyut = 80;
-
     Degiskenler.showDialogNotifier.value=false;
   }
   void hediye() {
@@ -522,10 +663,12 @@ class CustomDialog extends StatelessWidget {
     }
     closeDialog();
   }
+
   @override
   Widget build(BuildContext context) {
     ekranBoyutNotifier = Provider.of<EkranBoyutNotifier>(context, listen: true);
     String noticeText = icerik.contains('https://benolanben.com/dinle/') ? ' Dinle! Hediyeyi Duyacaksın' : icerik;
+    if (goster) changeUI(); //eğer bildirim gösterilmeyecek ise, ekranı düzenle
 
     return Center(
       child: Container(
@@ -570,7 +713,7 @@ class CustomDialog extends StatelessWidget {
                   }
                   else {
                     SharedPreferences prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('bildirim_goster', true);
+                    await prefs.setString('bildirim',icerik);
                     closeDialog();
                   }
                 },
@@ -730,6 +873,7 @@ void hediye_irtibat(link, id) {
             item['sira_no'],
             true
         );
+        Degiskenler.hediyeninIndex=item['sira_no'];
         break;
       }
     }
@@ -764,11 +908,13 @@ void bildirimKontrol(bildirim) async {
   //print("KONTROLL $suAn ==> $vakit1, $vakit2");
 
   if (suAn.isAfter(vakit1) && suAn.isBefore(vakit2)) { //bildirim zamanında mıyız
-    print("Bildirim ==> Şu an vakit1 ve vakit2 arasında.");
+    //print("Bildirim ==> Şu an vakit1 ve vakit2 arasında.");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? yanit = prefs.getString('bildirim') ?? "bos"; // Eğer değer yoksa false kullan
-    if (yanit.isNotEmpty && yanit!=bildirim["metin"]){
-      if(!Degiskenler.currentNoticeNotifier.value.contains('https://benolanben.com/dinle/')) {
+    print("Bildirim ==> Şu an vakit1 ve vakit2 arasında.  $yanit && ${bildirim["metin"]}");
+
+    if (yanit!=bildirim["metin"]){
+      if(!Degiskenler.currentNoticeNotifier.value.contains('https://benolanben.com/dinle/')) { //benolanben değilse
         Degiskenler.currentNoticeNotifier.value = bildirim["metin"];
         Degiskenler.showDialogNotifier.value = true;
       }
@@ -856,156 +1002,3 @@ class _Base64ImageWidgetState extends State<Base64ImageWidget> {
   }
 }
 
-enum ConfettiShape { circle, heart, diamond, star }
-class ConfettiWidgetExample extends StatefulWidget {
-  @override
-  _ConfettiWidgetExampleState createState() => _ConfettiWidgetExampleState();
-}
-class _ConfettiWidgetExampleState extends State<ConfettiWidgetExample> {
-  late ConfettiController _controllerCenter;
-  late ConfettiShape _selectedShape;
-
-  final _shapes = [
-    ConfettiShape.circle,
-    ConfettiShape.heart,
-    ConfettiShape.diamond,
-    ConfettiShape.star,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _controllerCenter = ConfettiController(
-      duration: const Duration(seconds: 5),
-    );
-    _selectedShape = _shapes[0];
-  }
-
-  @override
-  void dispose() {
-    _controllerCenter.dispose();
-    super.dispose();
-  }
-
-  void _startConfetti(ConfettiShape shape, ConfettiController controller) {
-    controller.play();
-    setState(() {
-      _selectedShape = shape;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          ConfettiWidget(
-            confettiController: _controllerCenter,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: true,
-            gravity: 0.001,
-            colors: [Color(0xFFFF0000)],
-            // Sadece kırmızı renk kullanacak
-            numberOfParticles: 10,
-            // Konfeti parçacık sayısı
-            createParticlePath: _drawShape, // Seçilen şekli kullan
-          ),
-          SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () => _startConfetti(_shapes[1], _controllerCenter),
-                child: Text('Kalp'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Path _drawShape(Size size) {
-    switch (_selectedShape) {
-      case ConfettiShape.circle:
-        return _drawCircle(size);
-      case ConfettiShape.heart:
-        return _drawHeart(size);
-      case ConfettiShape.diamond:
-        return _drawDiamond(size);
-      case ConfettiShape.star:
-        return _drawStar(size);
-      default:
-        return _drawCircle(size);
-    }
-  }
-
-  Path _drawCircle(Size size) {
-    final path = Path();
-    path.addOval(Rect.fromCenter(
-        center: size.center(Offset.zero), width: 20, height: 20));
-    return path;
-  }
-
-  Path _drawHeart(Size size) {
-    final path = Path();
-    final x = size.width / 2;
-    final y = size.height / 2;
-    final step = size.width / 40;
-    path.moveTo(x, y);
-    // Sol yarı kalp
-    for (double angle = 0; angle < pi; angle += 0.01) {
-      final dx = 16 * pow(sin(angle), 3);
-      final dy = -(13 * cos(angle) -
-          5 * cos(2 * angle) -
-          2 * cos(3 * angle) -
-          cos(4 * angle));
-      path.lineTo(x - dx * step, y - dy * step);
-    }
-    // Sağ yarı kalp
-    for (double angle = 0; angle < pi; angle += 0.01) {
-      final dx = 16 * pow(sin(angle), 3);
-      final dy = -(13 * cos(angle) -
-          5 * cos(2 * angle) -
-          2 * cos(3 * angle) -
-          cos(4 * angle));
-      path.lineTo(x + dx * step, y - dy * step);
-    }
-    return path;
-  }
-
-  Path _drawDiamond(Size size) {
-    final path = Path();
-    final halfWidth = size.width / 2;
-    final halfHeight = size.height / 2;
-
-    path.moveTo(halfWidth, 0);
-    path.lineTo(size.width, halfHeight);
-    path.lineTo(halfWidth, size.height);
-    path.lineTo(0, halfHeight);
-    path.close();
-
-    return path;
-  }
-
-  Path _drawStar(Size size) {
-    final path = Path();
-    final halfWidth = size.width / 2;
-    final halfHeight = size.height / 2;
-
-    path.moveTo(halfWidth, 0);
-    path.lineTo(halfWidth + size.width * 0.05, halfHeight - size.height * 0.2);
-    path.lineTo(size.width, halfHeight - size.height * 0.3);
-    path.lineTo(halfWidth + size.width * 0.3, halfHeight + size.height * 0.1);
-    path.lineTo(halfWidth + size.width * 0.5, size.height);
-    path.lineTo(halfWidth, halfHeight + size.height * 0.4);
-    path.lineTo(halfWidth - size.width * 0.5, size.height);
-    path.lineTo(halfWidth - size.width * 0.3, halfHeight + size.height * 0.1);
-    path.lineTo(0, halfHeight - size.height * 0.3);
-    path.lineTo(halfWidth - size.width * 0.05, halfHeight - size.height * 0.2);
-    path.close();
-
-    return path;
-  }
-}

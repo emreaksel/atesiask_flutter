@@ -48,7 +48,7 @@ class EkranBoyutModel {
 }
 class EkranBoyutNotifier extends ChangeNotifier {
   EkranBoyutModel _ekranBoyutModel = EkranBoyutModel(
-      altEkranBoyut: 17, ustEkranBoyut: 83, ustEkranAktifIndex: 0);
+      altEkranBoyut: 20, ustEkranBoyut: 80, ustEkranAktifIndex: 0);
 
   int get altEkranBoyut => _ekranBoyutModel.altEkranBoyut;
 
